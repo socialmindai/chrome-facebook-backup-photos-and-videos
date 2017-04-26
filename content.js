@@ -19,17 +19,19 @@ function getLinks() {
 
 
 chrome.runtime.onMessage.addListener(function(message,sender,sendResponse){
-	console.log(message);
-	if (message.m == 'current_url') {
+	if (! message.hasOwnProperty("m")) {
+		console.error("Message is missing m property!!!");
+		console.dir(message);
+		return;
+	}
+
+	if (message.m === 'current_url') {
 		message.url = document.location.href;
 		sendResponse(message);
-	} else {
-		console.log("Calling sendResponse");
+	} else if (message.m === 'extract_links'){
 		message.r = "content.js - sendResponse";
 		links = getLinks();
 		message.links = links;
 		sendResponse(message);
 	}
 });
-
-console.log("content.js - was loaded");

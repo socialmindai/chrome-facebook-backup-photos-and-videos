@@ -1,5 +1,3 @@
-var current_url = "";
-
 function bId(id) {
 	return document.getElementById(id);
 }
@@ -38,12 +36,9 @@ function extractFbId(href) {
 	}
 
 	for (var key in regexs) {
-		console.log(key);
 		for (var i in regexs[key]) {
 			var regex = regexs[key][i];
-			console.log(regex);
 			regex_match = href.match(regex);
-			console.log(regex_match);
 			if (regex_match) {
 				return { id: regex_match[1], type: key }
 			}
@@ -54,7 +49,6 @@ function extractFbId(href) {
 }
 
 function appendLink(parent, href) {
-	console.log("appendLink: " + href);
 	fbid = extractFbId(href);
 	if (! fbid) {
 		console.error("Cannot extract fbid from " + href);
@@ -68,6 +62,7 @@ function appendLink(parent, href) {
 	cb.setAttribute("name", "cb_" + fbid.id);
 	cb.setAttribute("url", href);
 	cb.setAttribute("url_type", fbid.type);
+	cb.setAttribute("fbid", fbid.id);
 	cb.setAttribute("type", "checkbox");
 	cb.checked = true;
 
@@ -89,9 +84,6 @@ function appendLink(parent, href) {
 
 function appendLinks(parent_id, links) {
 	var parent = bId(parent_id);
-	console.log("appendLinks");
-	console.dir(parent_id);
-	console.dir(links);
 
 	while (parent.hasChildNodes()) {
 		parent.removeChild(parent.lastChild);
@@ -103,8 +95,6 @@ function appendLinks(parent_id, links) {
 }
 
 function extractLinks(tabs) {
-	console.log("Calling extractLinks");
-	console.dir(tabs);
 	hide("notgroup");
 	show("ingroup");
 	show("goto_photos");
@@ -116,7 +106,6 @@ function extractLinks(tabs) {
 		tabs[0].id,
 		{m: 'extract_links'},
 		function(response){
-			console.log("popup.js - chrome.tabs.sendMessage - callback");
 
 			if (! response) {
 				console.error("Somethign went wrong - no response!");
@@ -138,11 +127,111 @@ function extractLinks(tabs) {
 				photos = links.filter(function(s) { return s.indexOf("photo") !== -1; });
 				appendLinks("tableresults", photos);
 			}
-
-			console.dir(response);
 		}
 	);
 
+}
+
+
+function constructFileNamePrefix(fbid, ts) {
+	var d = new Date(ts * 1000);
+	var iso = d.toISOString().replace(/[:.]/g, "-").replace("-000Z", "");
+	return iso + "_" + fbid;
+}
+
+
+function extractTimeStamp(txt) {
+	// data-utime="1493189486"
+	m = txt.match(/data-utime="([0-9]+)"/);
+	return m ? m[1] : 0
+}
+
+function downloadVideos(fbid, txt) {
+	var ts = extractTimeStamp(txt);
+	var prefix = constructFileNamePrefix(fbid, ts);
+
+	sd_src = txt.match(/sd_src:"([^"]+)"/);
+	if (sd_src) {
+		chrome.downloads.download({
+			url: sd_src[1],
+			filename: prefix + "_sd.mp4",
+			conflictAction: "prompt"
+		});
+		console.log("sd_src: " + sd_src[1]);
+	}
+
+	hd_src = txt.match(/hd_src:"([^"]+)"/);
+	if (hd_src) {
+		chrome.downloads.download({
+			url: hd_src[1],
+			filename: prefix + "_hd.mp4",
+			conflictAction: "prompt"
+		});
+		console.log("hd_src: " + hd_src[1]);
+	}
+}
+
+function downloadPhoto(fbid, txt) {
+	var ts = extractTimeStamp(txt);
+	var prefix = constructFileNamePrefix(fbid, ts);
+ 	src = txt.match(/data-ploi="([^"]+)"/);
+	if (src) {
+		/*
+		console.log(src[1]);
+		console.log(decodeURIComponent(src[1]));
+		console.log(decodeURI(src[1]));
+		*/
+		chrome.downloads.download({
+			url: src[1].replace(/amp;/g, ""),
+			filename: prefix + ".jpg",
+			conflictAction: "prompt"
+		});
+		console.log("img_src: " + src[1]);
+	}
+
+}
+
+
+
+
+function downloadAll() {
+	inputs = document.getElementsByTagName("input");
+	for (i = 0; i < inputs.length; i++) {
+	    inp = inputs[i];
+	    if (
+				inp.hasAttribute("type") &&
+				inp.getAttribute("type") === "checkbox" &&
+				inp.hasAttribute("url_type") &&
+				inp.hasAttribute("url") &&
+				inp.checked
+			) {
+				url = inp.getAttribute("url");
+				url_type = inp.getAttribute("url_type");
+				fbid = inp.getAttribute("fbid");
+
+				var xhr = new XMLHttpRequest();
+				xhr.open("GET", url, true);
+				//xhr.setRequestHeader("Content-Type","application/json");
+				//xhr.send(JSON.stringify(data));
+				xhr.onreadystatechange = function() {
+				  if (xhr.readyState == 4) {
+						var res = {};
+						if (url_type === "video") {
+							res = downloadVideos(fbid, xhr.responseText);
+						} else if (url_type === "photo") {
+							res = downloadPhoto(fbid, xhr.responseText);
+						} else {
+							console.error("Unsupported url_type: " + url_type);
+						}
+						console.dir(res);
+
+
+						console.dir(xhr);
+				  }
+				}
+				xhr.send();
+	    }
+	}
 }
 
 
@@ -176,6 +265,12 @@ function updateButtons(tabs, group_id) {
 			);
 		}
 	);
+
+	document.querySelector('#download').addEventListener(
+		'click',
+		downloadAll
+	);
+
 }
 
 
@@ -183,20 +278,19 @@ document.addEventListener(
 	'DOMContentLoaded',
 	function() {
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-			console.log("Calling chrome.tabs.sendMessage");
+			// console.log("Calling chrome.tabs.sendMessage");
     	chrome.tabs.sendMessage(
 				tabs[0].id,
 				{m: 'current_url'},
 				function(response){
 					// now we should show/hide proper buttons
-					console.dir(response);
+					// console.dir(response);
 					var url = response.url
 					var group_regex = /facebook\.com\/groups\/([0-9]+)\//
 
 					regex_match = url.match(group_regex);
 					if (regex_match) {
 						// we are in group now
-						console.dir(regex_match);
 						show("ingroup");
 						hide("notgroup");
 						var group_id = regex_match[1];

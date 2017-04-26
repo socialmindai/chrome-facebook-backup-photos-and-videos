@@ -4,15 +4,27 @@
   "version": "0.0",
   "background": {
     "persistent": false,
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
-  "content_scripts": [{
-    "matches": ["*://*.facebook.com/*"],
-    "js": ["content.js"]
-  }],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.facebook.com/*",
+        "*://*.fbcdn.net/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
   "browser_action": {
     "default_title": "Download",
     "default_popup": "popup.html"
   },
-  "permissions": ["activeTab"]
+  "permissions": [
+    "activeTab",
+    "downloads"
+  ]
 }
