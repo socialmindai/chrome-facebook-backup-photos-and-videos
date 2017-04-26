@@ -16,22 +16,20 @@ function getLinks() {
 
 	return hrefs;
 }
-	
+
 
 chrome.runtime.onMessage.addListener(function(message,sender,sendResponse){
 	console.log(message);
-	console.log("Calling sendResponse");
-	message.r = "content.js - sendResponse";
-	links = getLinks();
-	message.links = links;
-	sendResponse(message);
-
-	chrome.runtime.sendMessage(
-		{s: 'content.js - chrome.runtime.sendMessage - local'}, 
-		function handler(response) { }
-	);
-
+	if (message.m == 'current_url') {
+		message.url = document.location.href;
+		sendResponse(message);
+	} else {
+		console.log("Calling sendResponse");
+		message.r = "content.js - sendResponse";
+		links = getLinks();
+		message.links = links;
+		sendResponse(message);
+	}
 });
 
 console.log("content.js - was loaded");
-

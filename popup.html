@@ -2,26 +2,22 @@
 <style>
 </style>
 <script src="popup.js"></script>
+<style>
+
+
+</style>
 </head>
 <body>
-<button id="extract">Extract</button>
-<div id="results">
-<ul>
-	<li><input type="checkbox" id="photos_all" value="checked" checked="checked" />Photos
-		<ul id="photos_links">
+	<p id="notgroup">This is not a group</p>
+	<div id="ingroup">
+		<button id="goto_photos">Photos</button>
+		<button id="goto_videos">Videos</button>
+		<div id="results">
+			<table id="tableresults">
 
-		</ul>
-	</li>
-	<li><input type="checkbox" id="videos_all" value="checked" checked="checked" />Videos
-		<ul id="videos_links">
+			</table>
+			<button id="download">Download</button>
 
-		</ul>
-	</li>
-
-
-
-</ul>
-
-
-</div>
+		</div>
+	</div>
 </body>
