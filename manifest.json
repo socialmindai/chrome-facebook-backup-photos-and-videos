@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "FB Groups Photos And Videos",
+  "version": "0.0",
+  "background": {
+    "persistent": false,
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [{
+    "matches": ["*://*.facebook.com/*"],
+    "js": ["content.js"]
+  }],
+  "browser_action": {
+    "default_title": "Download",
+    "default_popup": "popup.html"
+  },
+  "permissions": ["activeTab"]
+}
