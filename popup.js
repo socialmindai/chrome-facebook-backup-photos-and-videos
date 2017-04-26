@@ -15,15 +15,6 @@ function cC(id_) {
 	var c = document.createElement("input");
 }
 
-/*
-https://www.facebook.com/photo.php?fbid=1679596962056722&set=pcb.436765463336727&type=3
-https://www.facebook.com/photo.php?fbid=1676383735711378&set=gm.435385996808007&type=3
-Videos
-https://www.facebook.com/martin.majlis/videos/pcb.446342962378977/10210634986085218/?type=3
-https://www.facebook.com/martin.majlis/videos/pcb.446342962378977/10210634993165395/?type=3
-https://www.facebook.com/martin.majlis/videos/10210656631826348/?ref=notif&notif_t=video_processed&notif_id=1493189647191248
-*/
-
 function extractFbId(href) {
 	regexs = {
 		'photo': [
@@ -278,43 +269,43 @@ document.addEventListener(
 	'DOMContentLoaded',
 	function() {
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-			// console.log("Calling chrome.tabs.sendMessage");
-    	chrome.tabs.sendMessage(
-				tabs[0].id,
-				{m: 'current_url'},
-				function(response){
-					// now we should show/hide proper buttons
-					// console.dir(response);
-					var url = response.url
-					var group_regex = /facebook\.com\/groups\/([0-9]+)\//
+		// console.log("Calling chrome.tabs.sendMessage");
 
-					regex_match = url.match(group_regex);
-					if (regex_match) {
-						// we are in group now
-						show("ingroup");
-						hide("notgroup");
-						var group_id = regex_match[1];
+		chrome.tabs.sendMessage(
+			tabs[0].id,
+			{m: 'current_url'},
+			function(response){
+				// now we should show/hide proper buttons
+				// console.dir(response);
+				var url = response.url
+				var group_regex = /facebook\.com\/groups\/([0-9]+)\//
 
-						updateButtons(tabs, group_id);
+				regex_match = url.match(group_regex);
+				if (regex_match) {
+					// we are in group now
+					show("ingroup");
+					hide("notgroup");
+					var group_id = regex_match[1];
+
+					updateButtons(tabs, group_id);
 
 
-						var is_photo = url.match(/\/groups\/([0-9]+)\/photos/);
-						var is_video = url.match(/\/groups\/([0-9]+)\/videos/);
-						if (is_photo || is_video) {
-							//hide("goto_photos");
-							//hide("goto_videos");
-							extractLinks(tabs);
-						} else {
-							// hide("extract");
-							hide("results");
-
-						}
+					var is_photo = url.match(/\/groups\/([0-9]+)\/photos/);
+					var is_video = url.match(/\/groups\/([0-9]+)\/videos/);
+					if (is_photo || is_video) {
+						//hide("goto_photos");
+						//hide("goto_videos");
+						extractLinks(tabs);
 					} else {
-						show("notgroup");
-						hide("ingroup");
+						// hide("extract");
+						hide("results");
+
 					}
+				} else {
+					show("notgroup");
+					hide("ingroup");
 				}
-			);
+			});
 		});
 	}
 );

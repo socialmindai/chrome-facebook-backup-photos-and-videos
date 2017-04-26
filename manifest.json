@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "name": "FB Groups Photos And Videos",
-  "version": "0.0",
+  "name": "FB Download Groups Photos And Videos",
+  "version": "0.1",
   "background": {
     "persistent": false,
     "scripts": [
@@ -24,7 +24,14 @@
     "default_popup": "popup.html"
   },
   "permissions": [
+    "*://*.facebook.com/*",
     "activeTab",
     "downloads"
-  ]
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
 }
