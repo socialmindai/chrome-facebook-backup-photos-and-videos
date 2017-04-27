@@ -49,7 +49,7 @@ function appendLink(parent, href) {
 	var tr = document.createElement("tr");
 	fbid = extractFbId(href);
 	cb = document.createElement("input");
-
+	cb.setAttribute("id", "cb_" + fbid.id);
 	cb.setAttribute("name", "cb_" + fbid.id);
 	cb.setAttribute("url", href);
 	cb.setAttribute("url_type", fbid.type);
@@ -71,8 +71,6 @@ function appendLink(parent, href) {
 	parent.appendChild(tr);
 }
 
-
-
 function appendLinks(parent_id, links) {
 	var parent = bId(parent_id);
 
@@ -83,6 +81,23 @@ function appendLinks(parent_id, links) {
 	for (i = 0; i < links.length; i++) {
 		appendLink(parent, links[i]);
 	}
+
+	var fbids = links
+		.map(extractFbId)
+		.filter(function(obj) { return obj !== undefined})
+		.map(function(obj) { return obj.id; });
+
+	chrome.storage.local.get(fbids, function(items){
+		for (var i = 0; i < fbids.length; i++) {
+			var fbid = fbids[i];
+			if (items.hasOwnProperty(fbid)) {
+				console.log("Already downloaded: " + fbid);
+				var cb = bId("cb_" + fbid);
+				cb.checked = false;
+				cb.title = "Already downloaded";
+			}
+		}
+	});
 
 	bId("totalcount").innerHTML = links.length;
 }
@@ -131,6 +146,14 @@ function constructFileNamePrefix(fbid, ts) {
 	return iso + "_" + fbid;
 }
 
+function markAsDownloaded(fbid) {
+	var toStore = {};
+	toStore["" + fbid] = 1;
+	chrome.storage.local.set(toStore, function(){
+		console.log("Marked as downloaded - callback: " + fbid);
+	});
+}
+
 function extractTimeStamp(txt) {
 	// data-utime="1493189486"
 	m = txt.match(/data-utime="([0-9]+)"/);
@@ -141,22 +164,24 @@ function downloadVideos(fbid, txt) {
 	var ts = extractTimeStamp(txt);
 	var prefix = constructFileNamePrefix(fbid, ts);
 
-	hd_src = txt.match(/hd_src:"([^"]+)"/);
+	var hd_src = txt.match(/hd_src:"([^"]+)"/);
 	if (hd_src) {
 		chrome.downloads.download({
 			url: hd_src[1],
 			filename: prefix + "_hd.mp4",
 			conflictAction: "prompt"
 		});
+		markAsDownloaded(fbid);
 		console.log("hd_src: " + hd_src[1]);
 	} else {
-		sd_src = txt.match(/sd_src:"([^"]+)"/);
+		var sd_src = txt.match(/sd_src:"([^"]+)"/);
 		if (sd_src) {
 			chrome.downloads.download({
 				url: sd_src[1],
 				filename: prefix + "_sd.mp4",
 				conflictAction: "prompt"
 			});
+			markAsDownloaded(fbid);
 			console.log("sd_src: " + sd_src[1]);
 		}
 	}
@@ -165,7 +190,7 @@ function downloadVideos(fbid, txt) {
 function downloadPhoto(fbid, txt) {
 	var ts = extractTimeStamp(txt);
 	var prefix = constructFileNamePrefix(fbid, ts);
- 	src = txt.match(/data-ploi="([^"]+)"/);
+ 	var src = txt.match(/data-ploi="([^"]+)"/);
 	if (src) {
 		/*
 		console.log(src[1]);
@@ -178,9 +203,28 @@ function downloadPhoto(fbid, txt) {
 			filename: prefix + ".jpg",
 			conflictAction: "prompt"
 		});
+		markAsDownloaded(fbid);
 		console.log("img_src: " + img_src);
 	}
 
+}
+
+function downloadHelper(fbid, url, url_type) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", url, true);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4) {
+			var res = {};
+			if (url_type === "video") {
+				res = downloadVideos(fbid, xhr.responseText);
+			} else if (url_type === "photo") {
+				res = downloadPhoto(fbid, xhr.responseText);
+			} else {
+				console.error("Unsupported url_type: " + url_type);
+			}
+		}
+	}
+	xhr.send();
 }
 
 function downloadAll() {
@@ -194,31 +238,11 @@ function downloadAll() {
 				inp.hasAttribute("url") &&
 				inp.checked
 			) {
-				url = inp.getAttribute("url");
-				url_type = inp.getAttribute("url_type");
-				fbid = inp.getAttribute("fbid");
+				var url = inp.getAttribute("url");
+				var url_type = inp.getAttribute("url_type");
+				var fbid = inp.getAttribute("fbid");
 
-				var xhr = new XMLHttpRequest();
-				xhr.open("GET", url, true);
-				//xhr.setRequestHeader("Content-Type","application/json");
-				//xhr.send(JSON.stringify(data));
-				xhr.onreadystatechange = function() {
-				  if (xhr.readyState == 4) {
-						var res = {};
-						if (url_type === "video") {
-							res = downloadVideos(fbid, xhr.responseText);
-						} else if (url_type === "photo") {
-							res = downloadPhoto(fbid, xhr.responseText);
-						} else {
-							console.error("Unsupported url_type: " + url_type);
-						}
-						console.dir(res);
-
-
-						console.dir(xhr);
-				  }
-				}
-				xhr.send();
+				downloadHelper(fbid, url, url_type);
 	    }
 	}
 }
