@@ -230,6 +230,7 @@ function updateButtons(tabs, group_id) {
 		function(tabId, changeInfo, tab) {
 			console.log("chrome.tabs.onUpdated - " + tabId + " - " + tab.status);
 			if (tab.status == "complete") {
+				show("scroll_down");
 				extractLinks([tab]);
 			}
 		}
@@ -272,14 +273,11 @@ function updateButtons(tabs, group_id) {
 					tabs[0].id,
 					{m: 'scroll_down'},
 					function(response){
-						console.dir(response);
 						height = response.height;
-
-						console.log("prev: " + prev + "; height: " + height);
+						extractLinks(tabs);
 						if (prev == height) {
+							hide("scroll_down");
 							clearInterval(interval);
-							console.log("we are done!!!");
-							extractLinks(tabs);
 						} else {
 							prev = height;
 						}
