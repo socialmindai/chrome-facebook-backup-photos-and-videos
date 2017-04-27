@@ -18,6 +18,7 @@ function getLinks() {
 }
 
 
+
 chrome.runtime.onMessage.addListener(function(message,sender,sendResponse){
 	if (! message.hasOwnProperty("m")) {
 		console.error("Message is missing m property!!!");
@@ -33,5 +34,13 @@ chrome.runtime.onMessage.addListener(function(message,sender,sendResponse){
 		links = getLinks();
 		message.links = links;
 		sendResponse(message);
+	} else if (message.m === 'scroll_down') {
+		// initial scroll down
+		window.scrollTo(0, document.body.scrollHeight);
+		message.height = document.body.scrollHeight;
+		sendResponse(message);
+	} else {
+		console.error("Unsupported operation " + message.m);
+		console.dir(message);
 	}
 });

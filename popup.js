@@ -83,6 +83,8 @@ function appendLinks(parent_id, links) {
 	for (i = 0; i < links.length; i++) {
 		appendLink(parent, links[i]);
 	}
+
+	bId("totalcount").innerHTML = links.length;
 }
 
 function extractLinks(tabs) {
@@ -262,6 +264,34 @@ function updateButtons(tabs, group_id) {
 		downloadAll
 	);
 
+	document.querySelector('#scroll_down').addEventListener(
+		'click',
+		function() {
+
+			var prev = 0;
+			var height = 0;
+			var interval = setInterval(scrollDown, 1000);
+			function scrollDown() {
+				chrome.tabs.sendMessage(
+					tabs[0].id,
+					{m: 'scroll_down'},
+					function(response){
+						console.dir(response);
+						height = response.height;
+
+						console.log("prev: " + prev + "; height: " + height);
+						if (prev == height) {
+							clearInterval(interval);
+							console.log("we are done!!!");
+							extractLinks(tabs);
+						} else {
+							prev = height;
+						}
+					}
+				);
+		};
+	}
+	);
 }
 
 
