@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Facebook Photos And Videos Backup",
-  "version": "0.2",
+  "version": "0.3",
   "background": {
     "persistent": false,
     "scripts": [
