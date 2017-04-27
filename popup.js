@@ -271,12 +271,20 @@ document.addEventListener(
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		// console.log("Calling chrome.tabs.sendMessage");
 
+		hide("notgroup");
+		hide("ingroup");
+
 		chrome.tabs.sendMessage(
 			tabs[0].id,
 			{m: 'current_url'},
 			function(response){
-				// now we should show/hide proper buttons
-				// console.dir(response);
+				if (response === undefined) {
+					// Extension is not running on supported URL
+					return;
+				}
+
+				hide("notsupporteddomain");
+
 				var url = response.url
 				var group_regex = /facebook\.com\/groups\/([0-9]+)\//
 
