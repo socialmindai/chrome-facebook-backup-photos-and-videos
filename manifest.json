@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "FB Download Groups Photos And Videos",
+  "name": "Facebook Photos And Videos Backup",
   "version": "0.2",
   "background": {
     "persistent": false,
