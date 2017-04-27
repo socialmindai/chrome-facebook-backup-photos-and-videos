@@ -125,13 +125,11 @@ function extractLinks(tabs) {
 
 }
 
-
 function constructFileNamePrefix(fbid, ts) {
 	var d = new Date(ts * 1000);
 	var iso = d.toISOString().replace(/[:.]/g, "-").replace("-000Z", "");
 	return iso + "_" + fbid;
 }
-
 
 function extractTimeStamp(txt) {
 	// data-utime="1493189486"
@@ -143,16 +141,6 @@ function downloadVideos(fbid, txt) {
 	var ts = extractTimeStamp(txt);
 	var prefix = constructFileNamePrefix(fbid, ts);
 
-	sd_src = txt.match(/sd_src:"([^"]+)"/);
-	if (sd_src) {
-		chrome.downloads.download({
-			url: sd_src[1],
-			filename: prefix + "_sd.mp4",
-			conflictAction: "prompt"
-		});
-		console.log("sd_src: " + sd_src[1]);
-	}
-
 	hd_src = txt.match(/hd_src:"([^"]+)"/);
 	if (hd_src) {
 		chrome.downloads.download({
@@ -161,6 +149,16 @@ function downloadVideos(fbid, txt) {
 			conflictAction: "prompt"
 		});
 		console.log("hd_src: " + hd_src[1]);
+	} else {
+		sd_src = txt.match(/sd_src:"([^"]+)"/);
+		if (sd_src) {
+			chrome.downloads.download({
+				url: sd_src[1],
+				filename: prefix + "_sd.mp4",
+				conflictAction: "prompt"
+			});
+			console.log("sd_src: " + sd_src[1]);
+		}
 	}
 }
 
@@ -174,18 +172,16 @@ function downloadPhoto(fbid, txt) {
 		console.log(decodeURIComponent(src[1]));
 		console.log(decodeURI(src[1]));
 		*/
+		img_src = src[1].replace(/amp;/g, "");
 		chrome.downloads.download({
-			url: src[1].replace(/amp;/g, ""),
+			url: img_src,
 			filename: prefix + ".jpg",
 			conflictAction: "prompt"
 		});
-		console.log("img_src: " + src[1]);
+		console.log("img_src: " + img_src);
 	}
 
 }
-
-
-
 
 function downloadAll() {
 	inputs = document.getElementsByTagName("input");
