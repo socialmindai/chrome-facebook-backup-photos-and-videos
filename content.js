@@ -30,7 +30,6 @@ chrome.runtime.onMessage.addListener(function(message,sender,sendResponse){
 		message.url = document.location.href;
 		sendResponse(message);
 	} else if (message.m === 'extract_links'){
-		message.r = "content.js - sendResponse";
 		links = getLinks();
 		message.links = links;
 		sendResponse(message);

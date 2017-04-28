@@ -18,7 +18,9 @@ function cC(id_) {
 function extractFbId(href) {
 	regexs = {
 		'photo': [
-			/photo\.php\?fbid=([0-9]+)/
+			/photo\.php\?fbid=([0-9]+)/,
+			/\/.*\/photos\/[^/]+\/([0-9]+)/,
+			/\/.*\/photos\/([0-9]+)\/$/,
 		],
 		'video': [
 			/videos\/[a-z]+\.[0-9]+\/([0-9]+)\//,
@@ -103,10 +105,10 @@ function appendLinks(parent_id, links) {
 }
 
 function extractLinks(tabs) {
-	hide("notgroup");
-	show("ingroup");
-	show("goto_photos");
-	show("goto_videos");
+	hide("notsupported");
+	show("supported");
+//	show("goto_photos");
+//	show("goto_videos");
 	// hide("extract");
 	show("results");
 
@@ -248,7 +250,7 @@ function downloadAll() {
 }
 
 
-function updateButtons(tabs, group_id) {
+function updateButtons(tabs, base_url, config) {
 
 	chrome.tabs.onUpdated.addListener(
 		function(tabId, changeInfo, tab) {
@@ -260,25 +262,33 @@ function updateButtons(tabs, group_id) {
 		}
 	);
 
-	var base_url = "https://www.facebook.com/groups/" + group_id + "/";
-	document.querySelector('#goto_photos').addEventListener(
-		'click',
-		function() {
-			chrome.tabs.update(
-				tabs[0].id,
-				{ url: base_url + "photos/" }
-			);
+
+	function onClick(id, url) {
+		document.querySelector('#' + id).addEventListener(
+			'click',
+			function() {
+				console.log(url);
+				chrome.tabs.update(
+					tabs[0].id,
+					{ url: "https://" + url }
+				);
+			}
+		);
+	}
+
+	types = ["photos", "videos"];
+	for (var i in types) {
+		var t = types[i];
+
+		var url = config.construct_url(base_url, t);
+		var id = "goto_" + t;
+		if (url) {
+			show(id);
+			onClick(id, url);
+		} else {
+			hide(id);
 		}
-	);
-	document.querySelector('#goto_videos').addEventListener(
-		'click',
-		function() {
-			chrome.tabs.update(
-				tabs[0].id,
-				{ url: base_url + "videos/" }
-			);
-		}
-	);
+	}
 
 	document.querySelector('#download').addEventListener(
 		'click',
@@ -291,7 +301,7 @@ function updateButtons(tabs, group_id) {
 
 			var prev = 0;
 			var height = 0;
-			var interval = setInterval(scrollDown, 1000);
+			var interval = setInterval(scrollDown, 2000);
 			function scrollDown() {
 				chrome.tabs.sendMessage(
 					tabs[0].id,
@@ -312,6 +322,65 @@ function updateButtons(tabs, group_id) {
 	);
 }
 
+// TODO: there should be better way how to recognize, where we are
+var regexp_configs = {
+	// URLs that should be ignored
+	ignore: {
+		regex_base: /(facebook\.com\/(bookmarks|campaign|settings|pages))/,
+	},
+	// groups have always groups in their URL
+	group: {
+		regex_base: /(facebook\.com\/groups\/([^/&?]+)\/)/,
+		regex_photos: /(facebook\.com\/groups\/([^/&?]+)\/)photos/,
+		regex_videos: /(facebook\.com\/groups\/([^/&?]+)\/)videos/,
+		construct_url: function(base, t) {
+			return base + t;
+		}
+	},
+	// pages could have pg as part of their URL
+	page: {
+		regex_base: /(facebook\.com\/pg\/([^/&?]+)\/)/,
+		regex_photos: /(facebook\.com\/pg\/([^/&?]+)\/)photos/,
+		regex_videos: /(facebook\.com\/pg\/([^/&?]+)\/)videos/,
+		construct_url: function(base, t) {
+			return base + t;
+		}
+	},
+	// events don't have videos URL
+	event: {
+		regex_base: /(facebook\.com\/events\/([^/&?]+)\/)/,
+		regex_photos: /(facebook\.com\/events\/([^/&?]+)\/)photos/,
+		regex_videos: /(facebook\.com\/events\/([^/&?]+)\/)videos/,
+		construct_url: function(base, t) {
+			if (t === 'videos') {
+				return undefined;
+			}
+			return base + t;
+		}
+	},
+	// people without username has profile id
+	profile: {
+		regex_base: /(facebook\.com\/profile\.php\?id=([^/&]+))/,
+		regex_photos: /(facebook\.com\/profile\.php\?id=([^/&]+)).*sk=photos/,
+		regex_videos: /(facebook\.com\/profile\.php\?id=([^/&]+)).*sk=videos/,
+		construct_url: function(base, t) {
+			return base + "&sk=" + t;
+		}
+	},
+	// lets assume that the rest is either
+	// pages have / at the end, whereas profiles don't :)
+	// facebook.com/zuck/ => zuck
+	// facebook.com/Funny.Cats.Videos.Daily => Funny.Cats.Videos.Daily/
+	rest: {
+		regex_base: /(facebook\.com\/([^/&?]+))/,
+		regex_photos: /(facebook\.com\/([^/&?]+))\/photos/,
+		regex_videos: /(facebook\.com\/([^/&?]+))\/videos/,
+		construct_url: function(base, t) {
+			return base + "/" + t;
+		}
+	},
+}
+
 
 document.addEventListener(
 	'DOMContentLoaded',
@@ -319,8 +388,8 @@ document.addEventListener(
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		// console.log("Calling chrome.tabs.sendMessage");
 
-		hide("notgroup");
-		hide("ingroup");
+		hide("notsupported");
+		hide("supported");
 
 		chrome.tabs.sendMessage(
 			tabs[0].id,
@@ -331,35 +400,76 @@ document.addEventListener(
 					return;
 				}
 
-				hide("notsupporteddomain");
-
 				var url = response.url
-				var group_regex = /facebook\.com\/groups\/([0-9]+)\//
+				if (url.match(/facebook\.com\//) === undefined) {
+					console.log(url);
+					return;
+				}
+				hide("notsupporteddomain");
+				show("notsupported");
+				hide("supported");
 
-				regex_match = url.match(group_regex);
-				if (regex_match) {
-					// we are in group now
-					show("ingroup");
-					hide("notgroup");
-					var group_id = regex_match[1];
+				for (var config_key in regexp_configs) {
+					var config = regexp_configs[config_key];
+					console.log(config_key);
+					console.dir(config);
 
-					updateButtons(tabs, group_id);
+					var regex_match = url.match(config['regex_base']);
+					console.dir(regex_match);
+					if (regex_match) {
+						if (config_key === 'ignore') {
+							// this is not supported URL
+							// we have set up correct element visibility at the beginning
+							return;
+						}
+						show("supported");
+						hide("notsupported");
 
+						base_url = regex_match[1];
+						updateButtons(tabs, base_url, config);
 
-					var is_photo = url.match(/\/groups\/([0-9]+)\/photos/);
-					var is_video = url.match(/\/groups\/([0-9]+)\/videos/);
-					if (is_photo || is_video) {
-						//hide("goto_photos");
-						//hide("goto_videos");
-						extractLinks(tabs);
-					} else {
-						// hide("extract");
-						hide("results");
-
+						var is_photo = url.match(config['regex_photos']);
+						var is_video = url.match(config['regex_videos']);
+						if (is_photo || is_video) {
+							//hide("goto_photos");
+							//hide("goto_videos");
+							extractLinks(tabs);
+						} else {
+							// hide("extract");
+							hide("results");
+						}
+						return;
 					}
-				} else {
-					show("notgroup");
-					hide("ingroup");
+
+					/*
+					var group_regex = /facebook\.com\/groups\/([0-9]+)\//
+
+					regex_match = url.match(group_regex);
+					if (regex_match) {
+						// we are in group now
+						show("supported");
+						hide("notsupported");
+						var group_id = regex_match[1];
+
+						updateButtons(tabs, group_id);
+
+
+						var is_photo = url.match(/\/groups\/([0-9]+)\/photos/);
+						var is_video = url.match(/\/groups\/([0-9]+)\/videos/);
+						if (is_photo || is_video) {
+							//hide("goto_photos");
+							//hide("goto_videos");
+							extractLinks(tabs);
+						} else {
+							// hide("extract");
+							hide("results");
+
+						}
+					} else {
+						show("notsupported");
+						hide("supported");
+					}
+				*/
 				}
 			});
 		});
