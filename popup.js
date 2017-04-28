@@ -302,15 +302,20 @@ function updateButtons(tabs, base_url, config) {
 			var prev = 0;
 			var height = 0;
 			var interval = setInterval(scrollDown, 2000);
+			var MAX_ITERATIONS = 5;
+			var current_iteration = 0;
 			function scrollDown() {
 				chrome.tabs.sendMessage(
 					tabs[0].id,
 					{m: 'scroll_down'},
 					function(response){
+						current_iteration++;
 						height = response.height;
 						extractLinks(tabs);
 						if (prev == height) {
 							hide("scroll_down");
+							clearInterval(interval);
+						} else if (current_iteration >= MAX_ITERATIONS) {
 							clearInterval(interval);
 						} else {
 							prev = height;
@@ -411,8 +416,6 @@ document.addEventListener(
 
 				for (var config_key in regexp_configs) {
 					var config = regexp_configs[config_key];
-					console.log(config_key);
-					console.dir(config);
 
 					var regex_match = url.match(config['regex_base']);
 					console.dir(regex_match);
@@ -441,35 +444,6 @@ document.addEventListener(
 						return;
 					}
 
-					/*
-					var group_regex = /facebook\.com\/groups\/([0-9]+)\//
-
-					regex_match = url.match(group_regex);
-					if (regex_match) {
-						// we are in group now
-						show("supported");
-						hide("notsupported");
-						var group_id = regex_match[1];
-
-						updateButtons(tabs, group_id);
-
-
-						var is_photo = url.match(/\/groups\/([0-9]+)\/photos/);
-						var is_video = url.match(/\/groups\/([0-9]+)\/videos/);
-						if (is_photo || is_video) {
-							//hide("goto_photos");
-							//hide("goto_videos");
-							extractLinks(tabs);
-						} else {
-							// hide("extract");
-							hide("results");
-
-						}
-					} else {
-						show("notsupported");
-						hide("supported");
-					}
-				*/
 				}
 			});
 		});

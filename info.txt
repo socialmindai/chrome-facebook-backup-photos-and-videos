@@ -2,3 +2,7 @@ Icon: https://www.iconfinder.com/icons/315180/document_download_icon
 
 Add icon: https://developer.chrome.com/extensions/manifest/icons
 - 16, 48, 128
+
+I18:
+- https://developer.chrome.com/extensions/i18n
+- Example: https://goo.gl/Jk3ayA
