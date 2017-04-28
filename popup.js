@@ -229,23 +229,33 @@ function downloadHelper(fbid, url, url_type) {
 	xhr.send();
 }
 
-function downloadAll() {
+function getCheckboxesForDownload() {
+	var checkboxes = [];
 	inputs = document.getElementsByTagName("input");
 	for (i = 0; i < inputs.length; i++) {
-	    inp = inputs[i];
-	    if (
-				inp.hasAttribute("type") &&
-				inp.getAttribute("type") === "checkbox" &&
-				inp.hasAttribute("url_type") &&
-				inp.hasAttribute("url") &&
-				inp.checked
-			) {
-				var url = inp.getAttribute("url");
-				var url_type = inp.getAttribute("url_type");
-				var fbid = inp.getAttribute("fbid");
+		inp = inputs[i];
+		if (
+			inp.hasAttribute("type") &&
+			inp.getAttribute("type") === "checkbox" &&
+			inp.hasAttribute("url_type") &&
+			inp.hasAttribute("url")
+		) {
+			checkboxes.push(inp);
+		}
+	}
+	return checkboxes;
+}
 
-				downloadHelper(fbid, url, url_type);
-	    }
+function downloadAll() {
+	inputs = getCheckboxesForDownload();
+	for (i = 0; i < inputs.length; i++) {
+		inp = inputs[i];
+		if (inp.checked) {
+			var url = inp.getAttribute("url");
+			var url_type = inp.getAttribute("url_type");
+			var fbid = inp.getAttribute("fbid");
+			downloadHelper(fbid, url, url_type);
+		}
 	}
 }
 
@@ -293,6 +303,16 @@ function updateButtons(tabs, base_url, config) {
 	document.querySelector('#download').addEventListener(
 		'click',
 		downloadAll
+	);
+
+	document.querySelector('#checkall').addEventListener(
+		'click',
+		function() {
+			inputs = getCheckboxesForDownload();
+			for (i = 0; i < inputs.length; i++) {
+				inputs[i].checked = true;
+			}
+		}
 	);
 
 	document.querySelector('#scroll_down').addEventListener(
