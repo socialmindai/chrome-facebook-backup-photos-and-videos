@@ -1,9 +1,25 @@
 <head>
 <style>
+body {
+	min-width: 270px;
+}
+
+#tableresults {
+	margin-top: 100px;
+}
+
+.navbar {
+	background-color: white;
+}
 </style>
 <script src="popup.js"></script>
+<!-- Bootstrap core CSS -->
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="bootstrap.min.css">
+<link rel="stylesheet" href="bootstrap-theme.min.css">
+
 </head>
-<body width="300">
+<body>
 	<div id="notsupporteddomain">
 		<p>This extension doesn't work for this domain. It only works for
 			<a href="https://www.facebook.com">facebook.com</a>.
@@ -11,17 +27,23 @@
 	</div>
 	<p id="notsupported">This extension supports groups, events, profiles, and pages. This URL doesn't look like one of them.</p>
 	<div id="supported">
-		<button id="goto_photos">Photos</button>
-		<button id="goto_videos">Videos</button>
-		<div id="results">
-			<p>
-				Total: <span id="totalcount">0</span>
-				<button id="scroll_down">More</button>
-			</p>
-			<button id="checkall">Check All</button>
-			<button id="download">Download</button>
-			<table id="tableresults">
-			</table>
+		<nav class="navbar navbar-fixed-top">
+			<button id="goto_photos" class="btn btn-default">Backup Photos</button>
+			<button id="goto_videos" class="btn btn-default">Backup Videos</button>
+			<div id="results_controls">
+				<div>
+					Backed up: <span id="backedupcount">0</span> / <span id="totalcount">0</span>
+				</div>
+				<button id="checkall" class="btn btn-default">Check All</button>
+				<button id="scroll_down" class="btn btn-default" >Load More</button>
+				<button id="backup" class="btn btn-primary">Backup</button>
+			</div>
+		</nav>
+		<div class="container" role="main">
+			<div id="results">
+				<table id="tableresults">
+				</table>
+			</div>
 		</div>
 	</div>
 </body>

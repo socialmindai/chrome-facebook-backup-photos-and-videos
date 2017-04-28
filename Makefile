@@ -5,7 +5,8 @@ pack:
 		background.js  content.js  \
 		icon128.png  icon16.png  icon32.png  icon48.png  \
 		manifest.json  popup.html  popup.js \
-		README.md LICENSE
+		README.md LICENSE \
+		bootstrap-theme.min.css bootstrap.min.css
 
 
 

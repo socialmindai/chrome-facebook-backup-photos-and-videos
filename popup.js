@@ -90,6 +90,7 @@ function appendLinks(parent_id, links) {
 		.map(function(obj) { return obj.id; });
 
 	chrome.storage.local.get(fbids, function(items){
+		var already_downloaded = 0;
 		for (var i = 0; i < fbids.length; i++) {
 			var fbid = fbids[i];
 			if (items.hasOwnProperty(fbid)) {
@@ -97,11 +98,14 @@ function appendLinks(parent_id, links) {
 				var cb = bId("cb_" + fbid);
 				cb.checked = false;
 				cb.title = "Already downloaded";
+				already_downloaded++;
 			}
 		}
+		bId("backedupcount").innerHTML = already_downloaded;
 	});
 
-	bId("totalcount").innerHTML = links.length;
+	bId("totalcount").innerHTML = fbids.length;
+
 }
 
 function extractLinks(tabs) {
@@ -111,6 +115,7 @@ function extractLinks(tabs) {
 //	show("goto_videos");
 	// hide("extract");
 	show("results");
+	show("results_controls");
 
 	chrome.tabs.sendMessage(
 		tabs[0].id,
@@ -300,7 +305,7 @@ function updateButtons(tabs, base_url, config) {
 		}
 	}
 
-	document.querySelector('#download').addEventListener(
+	document.querySelector('#backup').addEventListener(
 		'click',
 		downloadAll
 	);
@@ -438,7 +443,6 @@ document.addEventListener(
 					var config = regexp_configs[config_key];
 
 					var regex_match = url.match(config['regex_base']);
-					console.dir(regex_match);
 					if (regex_match) {
 						if (config_key === 'ignore') {
 							// this is not supported URL
@@ -460,6 +464,7 @@ document.addEventListener(
 						} else {
 							// hide("extract");
 							hide("results");
+							hide("results_controls");
 						}
 						return;
 					}
