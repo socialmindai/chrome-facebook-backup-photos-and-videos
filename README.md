@@ -16,6 +16,9 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
+### 0.5	(2017-02-28)
+- update manifest to contain more information
+
 ### 0.4	(2017-02-28)
 - add support for pages, user profiles, and events
 

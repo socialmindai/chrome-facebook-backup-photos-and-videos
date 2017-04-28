@@ -1,5 +1,8 @@
 Icon: https://www.iconfinder.com/icons/315180/document_download_icon
 
+Manifest:
+- https://developer.chrome.com/extensions/manifest
+
 Add icon: https://developer.chrome.com/extensions/manifest/icons
 - 16, 48, 128
 

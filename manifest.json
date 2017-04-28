@@ -1,7 +1,11 @@
 {
   "manifest_version": 2,
+  "version": "0.5",
   "name": "Facebook Backup Photos And Videos",
-  "version": "0.4",
+  "short_name": "Facebook Backup",
+  "homepage_url": "http://socialmind.ai/facebook-backup/",
+  "author": "Martin Majlis",
+  "description": "Backup all photos and videos from single group, page, or user profile.",
   "background": {
     "persistent": false,
     "scripts": [
