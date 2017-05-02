@@ -21,7 +21,10 @@
     "message": "Více"
   },
   "txtAlreadyBackedup": {
-    "message": "Zazálohováno"
+    "message": "Již zazálohováno"
+  },
+  "txtWillBeBackedup": {
+    "message": "Bude zazálohováno"
   },
   "txtNotSupportedDomain": {
     "message": "Toto rozšíření nefunguje pro tuto doménu. Toto rozšíření je určeno pro
@@ -32,5 +35,13 @@
   },
   "titleAlreadyDownloaded": {
     "message": "Již zazálohováno"
+  },
+  "txtConfirmBackups": {
+    "message": "$count$ položek bylo zazálohováno.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
   }
 }

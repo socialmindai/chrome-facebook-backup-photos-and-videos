@@ -1,3 +1,7 @@
+var already_downloaded = 0;
+var to_backup = 0;
+var downloaded_now = 0;
+
 function bId(id) {
 	return document.getElementById(id);
 }
@@ -58,6 +62,18 @@ function appendLink(parent, href) {
 	cb.setAttribute("fbid", fbid.id);
 	cb.setAttribute("type", "checkbox");
 	cb.checked = true;
+	cb.addEventListener(
+		'change',
+		function(e) {
+			if (e.target.checked) {
+				to_backup++;
+			} else {
+				to_backup--;
+			}
+			updateBackUpCount(to_backup);
+			hide("confirmbackups");
+		}
+	);
 
 	var td1 = document.createElement("td");
 	td1.appendChild(cb);
@@ -90,23 +106,39 @@ function appendLinks(parent_id, links) {
 		.map(function(obj) { return obj.id; });
 
 	chrome.storage.local.get(fbids, function(items){
-		var already_downloaded = 0;
+		already_downloaded = 0;
 		for (var i = 0; i < fbids.length; i++) {
 			var fbid = fbids[i];
 			if (items.hasOwnProperty(fbid)) {
-				console.log("Already downloaded: " + fbid);
+				// console.log("Already downloaded: " + fbid);
 				var cb = bId("cb_" + fbid);
 				cb.checked = false;
 				cb.title = chrome.i18n.getMessage("titleAlreadyDownloaded");
 				already_downloaded++;
 			}
 		}
-		bId("backedupcount").innerHTML = already_downloaded;
+		updateBackedUpCount(already_downloaded);
+		to_backup = fbids.length - already_downloaded;
+		updateBackUpCount(to_backup);
 	});
 
-	bId("totalcount").innerHTML = fbids.length;
+	updateTotalCount(fbids.length);
 
 }
+
+function updateTotalCount(count) {
+	bId("totalcount1").innerHTML = count;
+	bId("totalcount2").innerHTML = count;
+}
+
+function updateBackedUpCount(count) {
+	bId("backedupcount").innerHTML = count;
+}
+
+function updateBackUpCount(count) {
+	bId("backupcount").innerHTML = count;
+}
+
 
 function extractLinks(tabs) {
 	hide("notsupported");
@@ -114,7 +146,8 @@ function extractLinks(tabs) {
 //	show("goto_photos");
 //	show("goto_videos");
 	// hide("extract");
-	show("results");
+	// XXX show("results");
+	show("resultswrapper");
 	show("results_controls");
 
 	chrome.tabs.sendMessage(
@@ -157,7 +190,17 @@ function markAsDownloaded(fbid) {
 	var toStore = {};
 	toStore["" + fbid] = 1;
 	chrome.storage.local.set(toStore, function(){
-		console.log("Marked as downloaded - callback: " + fbid);
+		// console.log("Marked as downloaded - callback: " + fbid);
+		var inp = bId("cb_" + fbid).checked = false;
+		to_backup--;
+		updateBackUpCount(to_backup);
+		// TODO: we should update somewhere number of alredy downloaded
+
+		if (to_backup === 0) {
+			bId("confirmbackups").innerHTML = chrome.i18n.getMessage("txtConfirmBackups", [to_download]);
+			// window.alert("Downloaded count: " + to_download);
+			show("confirmbackups");
+		}
 	});
 }
 
@@ -253,8 +296,13 @@ function getCheckboxesForDownload() {
 
 function downloadAll() {
 	inputs = getCheckboxesForDownload();
-	for (i = 0; i < inputs.length; i++) {
-		inp = inputs[i];
+	checked_inputs = inputs.filter(
+		function (inp) { return inp.checked}
+	);
+
+	to_download = checked_inputs.length;
+	for (i = 0; i < checked_inputs.length; i++) {
+		inp = checked_inputs[i];
 		if (inp.checked) {
 			var url = inp.getAttribute("url");
 			var url_type = inp.getAttribute("url_type");
@@ -282,7 +330,8 @@ function updateButtons(tabs, base_url, config) {
 		document.querySelector('#' + id).addEventListener(
 			'click',
 			function() {
-				console.log(url);
+				hide("confirmbackups");
+				// console.log(url);
 				chrome.tabs.update(
 					tabs[0].id,
 					{ url: "https://" + url }
@@ -313,17 +362,20 @@ function updateButtons(tabs, base_url, config) {
 	document.querySelector('#checkall').addEventListener(
 		'click',
 		function() {
+			hide("confirmbackups");
 			inputs = getCheckboxesForDownload();
 			for (i = 0; i < inputs.length; i++) {
 				inputs[i].checked = true;
 			}
+			to_backup = inputs.length;
+			updateBackUpCount(to_backup);
 		}
 	);
 
 	document.querySelector('#scroll_down').addEventListener(
 		'click',
 		function() {
-
+			hide("confirmbackups");
 			var prev = 0;
 			var height = 0;
 			var interval = setInterval(scrollDown, 2000);
@@ -423,6 +475,8 @@ window.onload = function() {
 
 		hide("notsupported");
 		hide("supported");
+		hide("confirmbackups");
+		hide("resultswrapper");
 
 		chrome.tabs.sendMessage(
 			tabs[0].id,
@@ -466,8 +520,10 @@ window.onload = function() {
 							extractLinks(tabs);
 						} else {
 							// hide("extract");
-							hide("results");
+							// XXX hide("results");
 							hide("results_controls");
+							hide("confirmbackups");
+							hide("resultswrapper");
 						}
 						return;
 					}
@@ -495,6 +551,7 @@ function loadI18nMessages() {
 	setProperty('#scroll_down', 'innerText', 'btnMore');
 	setProperty('#backup', 'innerText', 'btnBackup');
 	setProperty('#alreadybackedup', 'innerText', 'txtAlreadyBackedup');
+	setProperty('#willbebackedup', 'innerText', 'txtWillBeBackedup');
 
 	setProperty('#notsupporteddomain', 'innerHTML', 'txtNotSupportedDomain');
 	setProperty('#notsupported', 'innerHTML', 'txtNotSupported');

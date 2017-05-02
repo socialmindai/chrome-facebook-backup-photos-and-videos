@@ -21,7 +21,10 @@
     "message": "More"
   },
   "txtAlreadyBackedup": {
-    "message": "Backed up"
+    "message": "Already backed up"
+  },
+  "txtWillBeBackedup": {
+    "message": "Will be backed up"
   },
   "txtNotSupportedDomain": {
     "message": "This extension doesn't work for this domain. It only works for
@@ -32,5 +35,13 @@
   },
   "titleAlreadyDownloaded": {
     "message": "Already backed up"
+  },
+  "txtConfirmBackups": {
+    "message": "$count$ items were downloaded.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
   }
 }

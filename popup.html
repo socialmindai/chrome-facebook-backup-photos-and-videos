@@ -15,8 +15,8 @@ html, body {
 	padding: 0px;
 }
 
-#tableresults {
-	margin-top: 100px;
+#resultswrapper {
+	padding-top: 110px;
 }
 
 .navbar {
@@ -25,7 +25,7 @@ html, body {
 	padding-right: 15px;
 }
 
-#notsupporteddomain, #notsupported {
+#notsupporteddomain, #notsupported, #confirmbackups {
 	margin: 0;
 }
 
@@ -47,14 +47,18 @@ html, body {
 				<button id="goto_videos" class="btn btn-default col-xs-6">Backup Videos</button>
 				<div id="results_controls">
 					<div>
-						<span id="alreadybackedup">Backed up</span>: <span id="backedupcount">0</span> / <span id="totalcount">0</span>
+						<span id="alreadybackedup">Backed up</span>: <span id="backedupcount">0</span> / <span id="totalcount1">0</span>
+					</div>
+					<div>
+						<span id="willbebackedup">Will be backed up</span>: <span id="backupcount">0</span> / <span id="totalcount2">0</span>
 					</div>
 					<button id="checkall" class="btn btn-default col-xs-4">Check All</button>
 					<button id="scroll_down" class="btn btn-default col-xs-4" >More</button>
 					<button id="backup" class="btn btn-primary col-xs-4">Backup</button>
 				</div>
 			</nav>
-			<div class="col-xs-12" role="main">
+			<div class="col-xs-12" role="main" id="resultswrapper">
+				<div id="confirmbackups" class="alert alert-success">XXXXX</div>
 				<div id="results">
 					<table id="tableresults">
 					</table>
