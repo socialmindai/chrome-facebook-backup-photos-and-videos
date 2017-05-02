@@ -1,0 +1,36 @@
+{
+  "extName": {
+    "message": "Facebook Backup Photos And Videos"
+  },
+  "extDescription": {
+    "message": "Backup all photos and videos from single group, page, or user profile."
+  },
+  "btnBackupPhotos": {
+    "message": "Backup Photos"
+  },
+  "btnBackupVideos": {
+    "message": "Backup Videos"
+  },
+  "btnCheckAll": {
+    "message": "Check All"
+  },
+  "btnBackup": {
+    "message": "Backup"
+  },
+  "btnMore": {
+    "message": "More"
+  },
+  "txtAlreadyBackedup": {
+    "message": "Backed up"
+  },
+  "txtNotSupportedDomain": {
+    "message": "This extension doesn't work for this domain. It only works for
+      <a href='https://www.facebook.com'>facebook.com</a>."
+  },
+  "txtNotSupported": {
+    "message": "This extension supports groups, events, profiles, and pages. This URL doesn't look like one of them."
+  },
+  "titleAlreadyDownloaded": {
+    "message": "Already downloaded"
+  }
+}

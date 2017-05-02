@@ -97,7 +97,7 @@ function appendLinks(parent_id, links) {
 				console.log("Already downloaded: " + fbid);
 				var cb = bId("cb_" + fbid);
 				cb.checked = false;
-				cb.title = "Already downloaded";
+				cb.title = chrome.i18n.getMessage("titleAlreadyDownloaded");
 				already_downloaded++;
 			}
 		}
@@ -411,10 +411,17 @@ var regexp_configs = {
 	},
 }
 
-
+/*
 document.addEventListener(
 	'DOMContentLoaded',
-	function() {
+*/
+window.onload = function() {
+		loadI18nMessages();
+		setTimeout(function(){
+			window.document.body.style.height = '50px';
+    // DOM manipulation stuff
+		}, 0);
+
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		// console.log("Calling chrome.tabs.sendMessage");
 
@@ -473,4 +480,28 @@ document.addEventListener(
 			});
 		});
 	}
-);
+//);
+
+
+function loadI18nMessages() {
+  function setProperty(selector, prop, msg) {
+		console.log(msg + ": " + chrome.i18n.getMessage(msg));
+    document.querySelector(selector)[prop] = chrome.i18n.getMessage(msg);
+  }
+	/* https://goo.gl/Jk3ayA
+  setProperty('title', 'innerText', 'tabTitle');
+  setProperty('#q', 'placeholder', 'searchPlaceholder');
+  setProperty('#clear-all', 'title', 'clearAllTitle');
+  setProperty('#open-folder', 'title', 'openDownloadsFolderTitle');
+	*/
+	setProperty('#goto_videos', 'innerText', 'btnBackupVideos');
+	setProperty('#goto_photos', 'innerText', 'btnBackupPhotos');
+	setProperty('#checkall', 'innerText', 'btnCheckAll');
+	setProperty('#scroll_down', 'innerText', 'btnMore');
+	setProperty('#backup', 'innerText', 'btnBackup');
+	setProperty('#alreadybackedup', 'innerText', 'txtAlreadyBackedup');
+
+	setProperty('#notsupporteddomain', 'innerHTML', 'txtNotSupportedDomain');
+	setProperty('#notsupported', 'innerHTML', 'txtNotSupported');
+
+}
