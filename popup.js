@@ -417,10 +417,6 @@ document.addEventListener(
 */
 window.onload = function() {
 		loadI18nMessages();
-		setTimeout(function(){
-			window.document.body.style.height = '50px';
-    // DOM manipulation stuff
-		}, 0);
 
 		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		// console.log("Calling chrome.tabs.sendMessage");

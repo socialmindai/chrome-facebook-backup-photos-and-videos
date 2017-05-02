@@ -31,6 +31,6 @@
     "message": "This extension supports groups, events, profiles, and pages. This URL doesn't look like one of them."
   },
   "titleAlreadyDownloaded": {
-    "message": "Already downloaded"
+    "message": "Already backed up"
   }
 }

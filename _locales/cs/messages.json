@@ -1,0 +1,36 @@
+{
+  "extName": {
+    "message": "Facebook Zálohování fotek a videí"
+  },
+  "extDescription": {
+    "message": "Zálohuj všechny fotky a videa z facebookové skupiny, stránky, události, nebo uživatelského profilu."
+  },
+  "btnBackupPhotos": {
+    "message": "Zálohovat fotky"
+  },
+  "btnBackupVideos": {
+    "message": "Zálohovat videa"
+  },
+  "btnCheckAll": {
+    "message": "Vybrat vše"
+  },
+  "btnBackup": {
+    "message": "Zálohovat"
+  },
+  "btnMore": {
+    "message": "Více"
+  },
+  "txtAlreadyBackedup": {
+    "message": "Zazálohováno"
+  },
+  "txtNotSupportedDomain": {
+    "message": "Toto rozšíření nefunguje pro tuto doménu. Toto rozšíření je určeno pro
+      <a href='https://www.facebook.com'>facebook.com</a>."
+  },
+  "txtNotSupported": {
+    "message": "Toto rozšíření funguje pro skupiny, události, stránky a uživatelské profily. Tato URL nevypadá jako jedna z nich."
+  },
+  "titleAlreadyDownloaded": {
+    "message": "Již zazálohováno"
+  }
+}
