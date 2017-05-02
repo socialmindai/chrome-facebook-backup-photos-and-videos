@@ -27,8 +27,7 @@
     "message": "Will be backed up"
   },
   "txtNotSupportedDomain": {
-    "message": "This extension doesn't work for this domain. It only works for
-      <a href='https://www.facebook.com'>facebook.com</a>."
+    "message": "This extension doesn't work for this domain. It only works for <a href='https://www.facebook.com'>facebook.com</a>."
   },
   "txtNotSupported": {
     "message": "This extension supports groups, events, profiles, and pages. This URL doesn't look like one of them."
