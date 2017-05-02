@@ -481,7 +481,6 @@ window.onload = function() {
 
 function loadI18nMessages() {
   function setProperty(selector, prop, msg) {
-		console.log(msg + ": " + chrome.i18n.getMessage(msg));
     document.querySelector(selector)[prop] = chrome.i18n.getMessage(msg);
   }
 	/* https://goo.gl/Jk3ayA
