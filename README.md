@@ -17,6 +17,8 @@ You can try extension on following facebook groups, pages, and user profiles.
 ## Changelog
 
 ### 0.7	(2017-05-02)
+- added support for internationalization
+- added translations for English and Czech
 - tweak UI
 
 ### 0.6	(2017-04-28)
