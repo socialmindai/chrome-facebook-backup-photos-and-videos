@@ -16,19 +16,22 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
-### 0.6	(2017-02-28)
+### 0.7	(2017-05-02)
 - tweak UI
 
-### 0.5	(2017-02-28)
+### 0.6	(2017-04-28)
+- tweak UI
+
+### 0.5	(2017-04-28)
 - update manifest to contain more information
 
-### 0.4	(2017-02-28)
+### 0.4	(2017-04-28)
 - add support for pages, user profiles, and events
 
-### 0.3	(2017-02-27)
+### 0.3	(2017-04-27)
 - uncheck already downloaded content
 
-### 0.2	(2017-02-27)
+### 0.2	(2017-04-27)
 - runs only on supported domains
 - added support for scrolling down to download all videos and photos
 
