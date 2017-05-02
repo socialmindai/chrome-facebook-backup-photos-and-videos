@@ -37,7 +37,11 @@ function extractFbId(href) {
 			var regex = regexs[key][i];
 			regex_match = href.match(regex);
 			if (regex_match) {
-				return { id: regex_match[1], type: key }
+				return {
+					id: regex_match[1],
+					type: key,
+				 	href: href
+				}
 			}
 		}
 	}
@@ -45,19 +49,13 @@ function extractFbId(href) {
 	return undefined;
 }
 
-function appendLink(parent, href) {
-	fbid = extractFbId(href);
-	if (! fbid) {
-		console.error("Cannot extract fbid from " + href);
-		return;
-	}
+function appendLink(parent, fbid) {
 
 	var tr = document.createElement("tr");
-	fbid = extractFbId(href);
 	cb = document.createElement("input");
 	cb.setAttribute("id", "cb_" + fbid.id);
 	cb.setAttribute("name", "cb_" + fbid.id);
-	cb.setAttribute("url", href);
+	cb.setAttribute("url", fbid.href);
 	cb.setAttribute("url_type", fbid.type);
 	cb.setAttribute("fbid", fbid.id);
 	cb.setAttribute("type", "checkbox");
@@ -80,7 +78,7 @@ function appendLink(parent, href) {
 	tr.appendChild(td1);
 
 	a = document.createElement("a");
-	a.href = href;
+	a.href = fbid.href;
 	a.appendChild(document.createTextNode(fbid.id));
 	var td2 = document.createElement("td");
 	td2.appendChild(a);
@@ -89,26 +87,41 @@ function appendLink(parent, href) {
 	parent.appendChild(tr);
 }
 
-function appendLinks(parent_id, links) {
+function appendLinks(parent_id, content_type, links) {
 	var parent = bId(parent_id);
 
+	// remove all previous rows
 	while (parent.hasChildNodes()) {
 		parent.removeChild(parent.lastChild);
 	}
 
-	for (i = 0; i < links.length; i++) {
-		appendLink(parent, links[i]);
+	// extract fbids of requested type
+	var fbids = {};
+	for (var i = 0; i < links.length; i++) {
+		var fbid = extractFbId(links[i]);
+		if (! fbid) {
+			console.error("Cannot extract fbid from " + href);
+			continue;
+		}
+		if (fbid.type !== content_type) {
+			// we don't want links for photos when we want videos
+			continue;
+		}
+		fbids[fbid.id] = fbid;
 	}
 
-	var fbids = links
-		.map(extractFbId)
-		.filter(function(obj) { return obj !== undefined})
-		.map(function(obj) { return obj.id; });
+	// construct table
+	var fbid_ids = [];
+	for (var key in fbids) {
+		appendLink(parent, fbids[key]);
+		fbid_ids.push(fbids[key].id);
+	}
 
-	chrome.storage.local.get(fbids, function(items){
+	// uncheck already downloaded ones
+	chrome.storage.local.get(fbid_ids, function(items){
 		already_downloaded = 0;
-		for (var i = 0; i < fbids.length; i++) {
-			var fbid = fbids[i];
+		for (var i = 0; i < fbid_ids.length; i++) {
+			var fbid = fbid_ids[i];
 			if (items.hasOwnProperty(fbid)) {
 				// console.log("Already downloaded: " + fbid);
 				var cb = bId("cb_" + fbid);
@@ -118,12 +131,11 @@ function appendLinks(parent_id, links) {
 			}
 		}
 		updateBackedUpCount(already_downloaded);
-		to_backup = fbids.length - already_downloaded;
+		to_backup = fbid_ids.length - already_downloaded;
 		updateBackUpCount(to_backup);
 	});
 
-	updateTotalCount(fbids.length);
-
+	updateTotalCount(fbid_ids.length);
 }
 
 function updateTotalCount(count) {
@@ -170,10 +182,10 @@ function extractLinks(tabs) {
 			links = response.links;
 			videos = links.filter(function(s) { return s.indexOf("video") !== -1; });
 			if (videos.length > 0) {
-				appendLinks("tableresults", videos);
+				appendLinks("tableresults", "video", videos);
 			} else {
 				photos = links.filter(function(s) { return s.indexOf("photo") !== -1; });
-				appendLinks("tableresults", photos);
+				appendLinks("tableresults", "photo", photos);
 			}
 		}
 	);
