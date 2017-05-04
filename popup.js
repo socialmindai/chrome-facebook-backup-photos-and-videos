@@ -95,6 +95,14 @@ function showOrHide(id, should_show) {
 	}
 }
 
+function btnActivate(id, activate) {
+	var btn = bId(id);
+	if (activate) {
+		btn.classList.add('active');
+	} else {
+		btn.classList.remove('active');
+	}
+}
 
 function cC(id_) {
 	var c = document.createElement("input");
@@ -463,6 +471,12 @@ function updateMediaButtons(tabs, base_url, config) {
 		document.querySelector('#' + id).addEventListener(
 			'click',
 			function() {
+				var media_buttons = document.getElementsByClassName("mediabutton");
+				for(var i = 0; i < media_buttons.length; i++) {
+					btnActivate(media_buttons[i].id, false);
+				}
+
+				btnActivate(id, true);
 				hide("confirmbackups");
 				// console.log(url);
 				chrome.tabs.update(
@@ -535,7 +549,6 @@ window.onload = function() {
 				showAsSupported(false);
 
 				fbid = extractFbId(url);
-				console.dir(fbid);
 				if (fbid !== undefined) {
 					showAsSupported(true);
 					showMediaButtons(false);
