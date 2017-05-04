@@ -16,6 +16,9 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
+### 0.9	(2017-05-04)
+- change icon
+
 ### 0.8	(2017-05-04)
 - show only unique content ids
 - allow downloading single photo or video

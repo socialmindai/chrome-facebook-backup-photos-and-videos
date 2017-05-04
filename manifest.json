@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "version": "0.8",
+  "version": "0.9",
   "name": "__MSG_extName__",
   "short_name": "Facebook Backup",
   "homepage_url": "http://socialmind.ai/facebook-backup/",
@@ -17,7 +17,6 @@
     {
       "matches": [
         "*://*.facebook.com/*",
-        "*://*.fbcdn.net/*"
       ],
       "js": [
         "content.js"
