@@ -16,8 +16,10 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
-### 0.8	(2017-05-02)
+### 0.8	(2017-05-04)
 - show only unique content ids
+- allow downloading single photo or video
+- tweak UI
 
 ### 0.7	(2017-05-02)
 - added support for internationalization

@@ -3,6 +3,78 @@ var total_count = 0;
 var to_backup = 0;
 var downloaded_now = 0;
 
+
+// TODO: there should be better way how to recognize, where we are
+var regexp_configs = {
+	// URLs that should be ignored
+	ignore: {
+		regex_base: /(facebook\.com\/(bookmarks|campaign|settings|pages|permalink\.php))/,
+	},
+	// groups have always groups in their URL
+	group: {
+		regex_base: /(facebook\.com\/groups\/([^/&?]+)\/)/,
+		regex_photos: /(facebook\.com\/groups\/([^/&?]+)\/)photos/,
+		regex_videos: /(facebook\.com\/groups\/([^/&?]+)\/)videos/,
+		construct_url: function(base, t) {
+			return base + t;
+		}
+	},
+	// pages could have pg as part of their URL
+	page: {
+		regex_base: /(facebook\.com\/pg\/([^/&?]+)\/)/,
+		regex_photos: /(facebook\.com\/pg\/([^/&?]+)\/)photos/,
+		regex_videos: /(facebook\.com\/pg\/([^/&?]+)\/)videos/,
+		construct_url: function(base, t) {
+			return base + t;
+		}
+	},
+	// events don't have videos URL
+	event: {
+		regex_base: /(facebook\.com\/events\/([^/&?]+)\/)/,
+		regex_photos: /(facebook\.com\/events\/([^/&?]+)\/)photos/,
+		regex_videos: /(facebook\.com\/events\/([^/&?]+)\/)videos/,
+		construct_url: function(base, t) {
+			if (t === 'videos') {
+				return undefined;
+			}
+			return base + t;
+		}
+	},
+	// people without username has profile id
+	profile: {
+		regex_base: /(facebook\.com\/profile\.php\?id=([^/&]+))/,
+		regex_photos: /(facebook\.com\/profile\.php\?id=([^/&]+)).*sk=photos/,
+		regex_videos: /(facebook\.com\/profile\.php\?id=([^/&]+)).*sk=videos/,
+		construct_url: function(base, t) {
+			return base + "&sk=" + t;
+		}
+	},
+	// lets assume that the rest is either
+	// pages have / at the end, whereas profiles don't :)
+	// facebook.com/zuck/ => zuck
+	// facebook.com/Funny.Cats.Videos.Daily => Funny.Cats.Videos.Daily/
+	rest: {
+		regex_base: /(facebook\.com\/([^/&?]+))/,
+		regex_photos: /(facebook\.com\/([^/&?]+))\/photos/,
+		regex_videos: /(facebook\.com\/([^/&?]+))\/videos/,
+		construct_url: function(base, t) {
+			return base + "/" + t;
+		}
+	},
+}
+
+photo_video_regex = {
+	'photo': [
+		/photo\.php\?fbid=([0-9]+)/,
+		/\/.*\/photos\/[^/]+\/([0-9]+)/,
+		/\/.*\/photos\/([0-9]+)\/$/,
+	],
+	'video': [
+		/videos\/[a-z]+\.[0-9]+\/([0-9]+)\//,
+		/videos\/([0-9]+)\//,
+	]
+}
+
 function bId(id) {
 	return document.getElementById(id);
 }
@@ -29,21 +101,9 @@ function cC(id_) {
 }
 
 function extractFbId(href) {
-	regexs = {
-		'photo': [
-			/photo\.php\?fbid=([0-9]+)/,
-			/\/.*\/photos\/[^/]+\/([0-9]+)/,
-			/\/.*\/photos\/([0-9]+)\/$/,
-		],
-		'video': [
-			/videos\/[a-z]+\.[0-9]+\/([0-9]+)\//,
-			/videos\/([0-9]+)\//,
-		]
-	}
-
-	for (var key in regexs) {
-		for (var i in regexs[key]) {
-			var regex = regexs[key][i];
+	for (var key in photo_video_regex) {
+		for (var i in photo_video_regex[key]) {
+			var regex = photo_video_regex[key][i];
 			regex_match = href.match(regex);
 			if (regex_match) {
 				return {
@@ -163,16 +223,15 @@ function updateBackUpCount() {
 	// showOrHide("checkall", to_backup < total_count);
 }
 
-
-function extractLinks(tabs) {
+function showResultsView() {
 	hide("notsupported");
 	show("supported");
-//	show("goto_photos");
-//	show("goto_videos");
-	// hide("extract");
-	// XXX show("results");
 	show("resultswrapper");
 	show("results_controls");
+}
+
+function extractLinks(tabs) {
+	showResultsView();
 
 	chrome.tabs.sendMessage(
 		tabs[0].id,
@@ -337,8 +396,7 @@ function downloadAll() {
 }
 
 
-function updateButtons(tabs, base_url, config) {
-
+function updateGeneralButtons(tabs) {
 	chrome.tabs.onUpdated.addListener(
 		function(tabId, changeInfo, tab) {
 			console.log("chrome.tabs.onUpdated - " + tabId + " - " + tab.status);
@@ -348,35 +406,6 @@ function updateButtons(tabs, base_url, config) {
 			}
 		}
 	);
-
-
-	function onClick(id, url) {
-		document.querySelector('#' + id).addEventListener(
-			'click',
-			function() {
-				hide("confirmbackups");
-				// console.log(url);
-				chrome.tabs.update(
-					tabs[0].id,
-					{ url: "https://" + url }
-				);
-			}
-		);
-	}
-
-	types = ["photos", "videos"];
-	for (var i in types) {
-		var t = types[i];
-
-		var url = config.construct_url(base_url, t);
-		var id = "goto_" + t;
-		if (url) {
-			show(id);
-			onClick(id, url);
-		} else {
-			hide(id);
-		}
-	}
 
 	document.querySelector('#backup').addEventListener(
 		'click',
@@ -428,63 +457,47 @@ function updateButtons(tabs, base_url, config) {
 	);
 }
 
-// TODO: there should be better way how to recognize, where we are
-var regexp_configs = {
-	// URLs that should be ignored
-	ignore: {
-		regex_base: /(facebook\.com\/(bookmarks|campaign|settings|pages|permalink\.php))/,
-	},
-	// groups have always groups in their URL
-	group: {
-		regex_base: /(facebook\.com\/groups\/([^/&?]+)\/)/,
-		regex_photos: /(facebook\.com\/groups\/([^/&?]+)\/)photos/,
-		regex_videos: /(facebook\.com\/groups\/([^/&?]+)\/)videos/,
-		construct_url: function(base, t) {
-			return base + t;
-		}
-	},
-	// pages could have pg as part of their URL
-	page: {
-		regex_base: /(facebook\.com\/pg\/([^/&?]+)\/)/,
-		regex_photos: /(facebook\.com\/pg\/([^/&?]+)\/)photos/,
-		regex_videos: /(facebook\.com\/pg\/([^/&?]+)\/)videos/,
-		construct_url: function(base, t) {
-			return base + t;
-		}
-	},
-	// events don't have videos URL
-	event: {
-		regex_base: /(facebook\.com\/events\/([^/&?]+)\/)/,
-		regex_photos: /(facebook\.com\/events\/([^/&?]+)\/)photos/,
-		regex_videos: /(facebook\.com\/events\/([^/&?]+)\/)videos/,
-		construct_url: function(base, t) {
-			if (t === 'videos') {
-				return undefined;
+function updateMediaButtons(tabs, base_url, config) {
+
+	function onClick(id, url) {
+		document.querySelector('#' + id).addEventListener(
+			'click',
+			function() {
+				hide("confirmbackups");
+				// console.log(url);
+				chrome.tabs.update(
+					tabs[0].id,
+					{ url: "https://" + url }
+				);
 			}
-			return base + t;
+		);
+	}
+
+	types = ["photos", "videos"];
+	for (var i in types) {
+		var t = types[i];
+
+		var url = config.construct_url(base_url, t);
+		var id = "goto_" + t;
+		if (url) {
+			show(id);
+			onClick(id, url);
+		} else {
+			hide(id);
 		}
-	},
-	// people without username has profile id
-	profile: {
-		regex_base: /(facebook\.com\/profile\.php\?id=([^/&]+))/,
-		regex_photos: /(facebook\.com\/profile\.php\?id=([^/&]+)).*sk=photos/,
-		regex_videos: /(facebook\.com\/profile\.php\?id=([^/&]+)).*sk=videos/,
-		construct_url: function(base, t) {
-			return base + "&sk=" + t;
-		}
-	},
-	// lets assume that the rest is either
-	// pages have / at the end, whereas profiles don't :)
-	// facebook.com/zuck/ => zuck
-	// facebook.com/Funny.Cats.Videos.Daily => Funny.Cats.Videos.Daily/
-	rest: {
-		regex_base: /(facebook\.com\/([^/&?]+))/,
-		regex_photos: /(facebook\.com\/([^/&?]+))\/photos/,
-		regex_videos: /(facebook\.com\/([^/&?]+))\/videos/,
-		construct_url: function(base, t) {
-			return base + "/" + t;
-		}
-	},
+	}
+}
+
+function showAsSupported(is_supported) {
+	showOrHide("supported", is_supported);
+	showOrHide("notsupported", ! is_supported);
+}
+
+function showMediaButtons(show_buttons) {
+	showOrHide("goto_photos", show_buttons);
+	showOrHide("goto_videos", show_buttons);
+	bId("resultswrapper").style['padding-top'] = show_buttons ? 110 : 80;
+	showOrHide("scroll_down", show_buttons);
 }
 
 /*
@@ -502,6 +515,8 @@ window.onload = function() {
 		hide("confirmbackups");
 		hide("resultswrapper");
 
+		updateGeneralButtons(tabs);
+
 		chrome.tabs.sendMessage(
 			tabs[0].id,
 			{m: 'current_url'},
@@ -517,8 +532,17 @@ window.onload = function() {
 					return;
 				}
 				hide("notsupporteddomain");
-				show("notsupported");
-				hide("supported");
+				showAsSupported(false);
+
+				fbid = extractFbId(url);
+				console.dir(fbid);
+				if (fbid !== undefined) {
+					showAsSupported(true);
+					showMediaButtons(false);
+					showResultsView();
+					appendLinks("tableresults", fbid.type, [url]);
+					return;
+				}
 
 				for (var config_key in regexp_configs) {
 					var config = regexp_configs[config_key];
@@ -530,11 +554,11 @@ window.onload = function() {
 							// we have set up correct element visibility at the beginning
 							return;
 						}
-						show("supported");
-						hide("notsupported");
+						showMediaButtons(true);
+						showAsSupported(true);
 
 						base_url = regex_match[1];
-						updateButtons(tabs, base_url, config);
+						updateMediaButtons(tabs, base_url, config);
 
 						var is_photo = url.match(config['regex_photos']);
 						var is_video = url.match(config['regex_videos']);
