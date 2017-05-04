@@ -1,4 +1,5 @@
 var already_downloaded = 0;
+var total_count = 0;
 var to_backup = 0;
 var downloaded_now = 0;
 
@@ -12,6 +13,14 @@ function hide(id) {
 
 function show(id) {
 	bId(id).style.display = '';
+}
+
+function showOrHide(id, should_show) {
+	if (should_show) {
+		show(id);
+	} else {
+		hide(id);
+	}
 }
 
 
@@ -68,7 +77,7 @@ function appendLink(parent, fbid) {
 			} else {
 				to_backup--;
 			}
-			updateBackUpCount(to_backup);
+			updateBackUpCount();
 			hide("confirmbackups");
 		}
 	);
@@ -130,25 +139,28 @@ function appendLinks(parent_id, content_type, links) {
 				already_downloaded++;
 			}
 		}
-		updateBackedUpCount(already_downloaded);
+		updateBackedUpCount();
 		to_backup = fbid_ids.length - already_downloaded;
-		updateBackUpCount(to_backup);
+		updateBackUpCount();
 	});
-
-	updateTotalCount(fbid_ids.length);
+	total_count = fbid_ids.length;
+	updateTotalCount();
 }
 
-function updateTotalCount(count) {
-	bId("totalcount1").innerHTML = count;
-	bId("totalcount2").innerHTML = count;
+function updateTotalCount() {
+	bId("totalcount1").innerHTML = total_count;
+	bId("totalcount2").innerHTML = total_count;
 }
 
-function updateBackedUpCount(count) {
-	bId("backedupcount").innerHTML = count;
+function updateBackedUpCount() {
+	bId("backedupcount").innerHTML = already_downloaded;
 }
 
-function updateBackUpCount(count) {
-	bId("backupcount").innerHTML = count;
+function updateBackUpCount() {
+	bId("backupcount").innerHTML = to_backup;
+	showOrHide("backup", to_backup > 0);
+	// TODO: It's not clear if disappearing buttons are good idea
+	// showOrHide("checkall", to_backup < total_count);
 }
 
 
@@ -205,7 +217,7 @@ function markAsDownloaded(fbid) {
 		// console.log("Marked as downloaded - callback: " + fbid);
 		var inp = bId("cb_" + fbid).checked = false;
 		to_backup--;
-		updateBackUpCount(to_backup);
+		updateBackUpCount();
 		// TODO: we should update somewhere number of alredy downloaded
 
 		if (to_backup === 0) {
@@ -380,7 +392,7 @@ function updateButtons(tabs, base_url, config) {
 				inputs[i].checked = true;
 			}
 			to_backup = inputs.length;
-			updateBackUpCount(to_backup);
+			updateBackUpCount();
 		}
 	);
 
