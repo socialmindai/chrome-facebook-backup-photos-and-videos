@@ -30,7 +30,7 @@
     "message": "This extension doesn't work for this domain. It only works for <a href='https://www.facebook.com'>facebook.com</a>."
   },
   "txtNotSupported": {
-    "message": "This extension supports groups, events, profiles, and pages. This URL doesn't look like one of them."
+    "message": "This extension supports groups, events, profiles, and pages. This URL doesn't look like one of them. Please, try to click directly on group, page, or user name. "
   },
   "titleAlreadyDownloaded": {
     "message": "Already backed up"

@@ -420,7 +420,7 @@ function updateButtons(tabs, base_url, config) {
 var regexp_configs = {
 	// URLs that should be ignored
 	ignore: {
-		regex_base: /(facebook\.com\/(bookmarks|campaign|settings|pages))/,
+		regex_base: /(facebook\.com\/(bookmarks|campaign|settings|pages|permalink\.php))/,
 	},
 	// groups have always groups in their URL
 	group: {
