@@ -104,6 +104,15 @@ function btnActivate(id, activate) {
 	}
 }
 
+function btnDisable(id, disable) {
+	var btn = bId(id);
+	if (disable) {
+		btn.classList.add('disabled');
+	} else {
+		btn.classList.remove('disabled');
+	}
+}
+
 function cC(id_) {
 	var c = document.createElement("input");
 }
@@ -226,9 +235,8 @@ function updateBackedUpCount() {
 
 function updateBackUpCount() {
 	bId("backupcount").innerHTML = to_backup;
-	showOrHide("backup", to_backup > 0);
-	// TODO: It's not clear if disappearing buttons are good idea
-	// showOrHide("checkall", to_backup < total_count);
+	btnDisable("backup", to_backup === 0);
+	btnDisable("checkall", to_backup === total_count);
 }
 
 function showResultsView() {
@@ -240,6 +248,11 @@ function showResultsView() {
 
 function extractLinks(tabs) {
 	showResultsView();
+
+	var control_buttons = document.getElementsByClassName("controlbutton");
+	for(var i = 0; i < control_buttons.length; i++) {
+		btnDisable(control_buttons[i].id, false);
+	}
 
 	chrome.tabs.sendMessage(
 		tabs[0].id,
@@ -409,7 +422,6 @@ function updateGeneralButtons(tabs) {
 		function(tabId, changeInfo, tab) {
 			console.log("chrome.tabs.onUpdated - " + tabId + " - " + tab.status);
 			if (tab.status == "complete") {
-				show("scroll_down");
 				extractLinks([tab]);
 			}
 		}
@@ -451,7 +463,7 @@ function updateGeneralButtons(tabs) {
 						height = response.height;
 						extractLinks(tabs);
 						if (prev == height) {
-							hide("scroll_down");
+							btnDisable("scroll_down", true);
 							clearInterval(interval);
 						} else if (current_iteration >= MAX_ITERATIONS) {
 							clearInterval(interval);
@@ -511,7 +523,7 @@ function showMediaButtons(show_buttons) {
 	showOrHide("goto_photos", show_buttons);
 	showOrHide("goto_videos", show_buttons);
 	bId("resultswrapper").style['padding-top'] = show_buttons ? 110 : 80;
-	showOrHide("scroll_down", show_buttons);
+	btnDisable("scroll_down", show_buttons);
 }
 
 /*
