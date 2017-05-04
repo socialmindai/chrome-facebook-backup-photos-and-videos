@@ -487,7 +487,6 @@ function updateMediaButtons(tabs, base_url, config) {
 				for(var i = 0; i < media_buttons.length; i++) {
 					btnActivate(media_buttons[i].id, false);
 				}
-
 				btnActivate(id, true);
 				hide("confirmbackups");
 				// console.log(url);
@@ -588,12 +587,10 @@ window.onload = function() {
 						var is_photo = url.match(config['regex_photos']);
 						var is_video = url.match(config['regex_videos']);
 						if (is_photo || is_video) {
-							//hide("goto_photos");
-							//hide("goto_videos");
+							btnActivate("goto_videos", is_video);
+							btnActivate("goto_photos", is_photo);
 							extractLinks(tabs);
 						} else {
-							// hide("extract");
-							// XXX hide("results");
 							hide("results_controls");
 							hide("confirmbackups");
 							hide("resultswrapper");
