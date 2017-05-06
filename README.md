@@ -16,6 +16,12 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
+### 1.1	(2017-05-06)
+- add google analytics
+
+### 1.0	(2017-05-04)
+- fix tooltip for main icon
+
 ### 0.9	(2017-05-04)
 - change icon
 

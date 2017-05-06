@@ -75,6 +75,32 @@ photo_video_regex = {
 	]
 }
 
+var _AnalyticsCode = 'UA-97010726-4';
+
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', _AnalyticsCode]);
+_gaq.push(['_trackPageview']);
+
+(function() {
+  var ga = document.createElement('script');
+  ga.type = 'text/javascript';
+  ga.async = true;
+  ga.src = 'https://ssl.google-analytics.com/ga.js';
+  var s = document.getElementsByTagName('script')[0];
+  s.parentNode.insertBefore(ga, s);
+})();
+
+/**
+ * Track a click on a button using the asynchronous tracking API.
+ *
+ * See http://code.google.com/apis/analytics/docs/tracking/asyncTracking.html
+ * for information on how to use the asynchronous tracking API.
+ */
+function trackButtonClick(e) {
+  _gaq.push(['_trackEvent', e.target.id, 'clicked']);
+}
+
+
 function bId(id) {
 	return document.getElementById(id);
 }
@@ -235,8 +261,8 @@ function updateBackedUpCount() {
 
 function updateBackUpCount() {
 	bId("backupcount").innerHTML = to_backup;
-	btnDisable("backup", to_backup === 0);
-	btnDisable("checkall", to_backup === total_count);
+	btnDisable("btn_backup", to_backup === 0);
+	btnDisable("btn_check_all", to_backup === total_count);
 }
 
 function showResultsView() {
@@ -427,12 +453,12 @@ function updateGeneralButtons(tabs) {
 		}
 	);
 
-	document.querySelector('#backup').addEventListener(
+	document.querySelector('#btn_backup').addEventListener(
 		'click',
 		downloadAll
 	);
 
-	document.querySelector('#checkall').addEventListener(
+	document.querySelector('#btn_check_all').addEventListener(
 		'click',
 		function() {
 			hide("confirmbackups");
@@ -445,7 +471,7 @@ function updateGeneralButtons(tabs) {
 		}
 	);
 
-	document.querySelector('#scroll_down').addEventListener(
+	document.querySelector('#btn_scroll_down').addEventListener(
 		'click',
 		function() {
 			hide("confirmbackups");
@@ -463,7 +489,7 @@ function updateGeneralButtons(tabs) {
 						height = response.height;
 						extractLinks(tabs);
 						if (prev == height) {
-							btnDisable("scroll_down", true);
+							btnDisable("btn_scroll_down", true);
 							clearInterval(interval);
 						} else if (current_iteration >= MAX_ITERATIONS) {
 							clearInterval(interval);
@@ -503,7 +529,7 @@ function updateMediaButtons(tabs, base_url, config) {
 		var t = types[i];
 
 		var url = config.construct_url(base_url, t);
-		var id = "goto_" + t;
+		var id = "btn_goto_" + t;
 		if (url) {
 			show(id);
 			onClick(id, url);
@@ -519,10 +545,10 @@ function showAsSupported(is_supported) {
 }
 
 function showMediaButtons(show_buttons) {
-	showOrHide("goto_photos", show_buttons);
-	showOrHide("goto_videos", show_buttons);
+	showOrHide("btn_goto_photos", show_buttons);
+	showOrHide("btn_goto_videos", show_buttons);
 	bId("resultswrapper").style['padding-top'] = show_buttons ? 110 : 80;
-	btnDisable("scroll_down", show_buttons);
+	btnDisable("btn_scroll_down", show_buttons);
 }
 
 /*
@@ -530,9 +556,14 @@ document.addEventListener(
 	'DOMContentLoaded',
 */
 window.onload = function() {
-		loadI18nMessages();
+	loadI18nMessages();
 
-		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+	var buttons = document.querySelectorAll('button');
+	for (var i = 0; i < buttons.length; i++) {
+		buttons[i].addEventListener('click', trackButtonClick);
+	}
+
+	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		// console.log("Calling chrome.tabs.sendMessage");
 
 		hide("notsupported");
@@ -548,12 +579,14 @@ window.onload = function() {
 			function(response){
 				if (response === undefined) {
 					// Extension is not running on supported URL
+					_gaq.push(['_trackEvent', 'view', 'noresponse']);
 					return;
 				}
 
 				var url = response.url
 				if (url.match(/facebook\.com\//) === undefined) {
 					console.log(url);
+					_gaq.push(['_trackEvent', 'view', 'notsupporteddomain']);
 					return;
 				}
 				hide("notsupporteddomain");
@@ -561,6 +594,7 @@ window.onload = function() {
 
 				fbid = extractFbId(url);
 				if (fbid !== undefined) {
+					_gaq.push(['_trackEvent', 'view', 'singleitem']);
 					showAsSupported(true);
 					showMediaButtons(false);
 					showResultsView();
@@ -576,6 +610,7 @@ window.onload = function() {
 						if (config_key === 'ignore') {
 							// this is not supported URL
 							// we have set up correct element visibility at the beginning
+							_gaq.push(['_trackEvent', 'view', 'notsupportedurl']);
 							return;
 						}
 						showMediaButtons(true);
@@ -587,17 +622,18 @@ window.onload = function() {
 						var is_photo = url.match(config['regex_photos']);
 						var is_video = url.match(config['regex_videos']);
 						if (is_photo || is_video) {
-							btnActivate("goto_videos", is_video);
-							btnActivate("goto_photos", is_photo);
+							_gaq.push(['_trackEvent', 'view', is_photo ? 'photos' : 'videos']);
+							btnActivate("btn_goto_videos", is_video);
+							btnActivate("btn_goto_photos", is_photo);
 							extractLinks(tabs);
 						} else {
+							_gaq.push(['_trackEvent', 'view', 'mainpage']);
 							hide("results_controls");
 							hide("confirmbackups");
 							hide("resultswrapper");
 						}
 						return;
 					}
-
 				}
 			});
 		});
@@ -615,11 +651,11 @@ function loadI18nMessages() {
   setProperty('#clear-all', 'title', 'clearAllTitle');
   setProperty('#open-folder', 'title', 'openDownloadsFolderTitle');
 	*/
-	setProperty('#goto_videos', 'innerText', 'btnBackupVideos');
-	setProperty('#goto_photos', 'innerText', 'btnBackupPhotos');
-	setProperty('#checkall', 'innerText', 'btnCheckAll');
-	setProperty('#scroll_down', 'innerText', 'btnMore');
-	setProperty('#backup', 'innerText', 'btnBackup');
+	setProperty('#btn_goto_videos', 'innerText', 'btnBackupVideos');
+	setProperty('#btn_goto_photos', 'innerText', 'btnBackupPhotos');
+	setProperty('#btn_check_all', 'innerText', 'btnCheckAll');
+	setProperty('#btn_scroll_down', 'innerText', 'btnMore');
+	setProperty('#btn_backup', 'innerText', 'btnBackup');
 	setProperty('#alreadybackedup', 'innerText', 'txtAlreadyBackedup');
 	setProperty('#willbebackedup', 'innerText', 'txtWillBeBackedup');
 
