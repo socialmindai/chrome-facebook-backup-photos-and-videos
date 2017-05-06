@@ -16,6 +16,9 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
+### 1.2	(2017-05-06)
+- include extension version into google analytics
+
 ### 1.1	(2017-05-06)
 - add google analytics
 

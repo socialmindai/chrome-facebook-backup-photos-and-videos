@@ -558,6 +558,7 @@ document.addEventListener(
 window.onload = function() {
 	loadI18nMessages();
 
+	_gaq.push(['_trackEvent', 'load', chrome.app.getDetails().version]);
 	var buttons = document.querySelectorAll('button');
 	for (var i = 0; i < buttons.length; i++) {
 		buttons[i].addEventListener('click', trackButtonClick);
