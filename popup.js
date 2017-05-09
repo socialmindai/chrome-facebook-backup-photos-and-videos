@@ -483,7 +483,9 @@ function updateGeneralButtons(tabs) {
 			hide("confirmbackups");
 			var prev = 0;
 			var height = 0;
-			var interval = setInterval(scrollDown, 2000);
+			var interval = setInterval(scrollDown, 5000);
+			hide("btn_scroll_down_label");
+			show("btn_scroll_down_spinner");
 			var MAX_ITERATIONS = 5;
 			var current_iteration = 0;
 			function scrollDown() {
@@ -496,8 +498,12 @@ function updateGeneralButtons(tabs) {
 						extractLinks(tabs);
 						if (prev == height) {
 							btnDisable("btn_scroll_down", true);
+							show("btn_scroll_down_label");
+							hide("btn_scroll_down_spinner");
 							clearInterval(interval);
 						} else if (current_iteration >= MAX_ITERATIONS) {
+							show("btn_scroll_down_label");
+							hide("btn_scroll_down_spinner");
 							clearInterval(interval);
 						} else {
 							prev = height;
@@ -577,6 +583,7 @@ window.onload = function() {
 		hide("supported");
 		hide("confirmbackups");
 		hide("resultswrapper");
+		hide("btn_scroll_down_spinner");
 
 		updateGeneralButtons(tabs);
 
@@ -670,9 +677,9 @@ function loadI18nMessages() {
 	*/
 	setProperty('#btn_goto_videos', 'innerText', 'btnBackupVideos');
 	setProperty('#btn_goto_photos', 'innerText', 'btnBackupPhotos');
-	setProperty('#btn_check_all', 'innerText', 'btnCheckAll');
-	setProperty('#btn_scroll_down', 'innerText', 'btnMore');
-	setProperty('#btn_backup', 'innerText', 'btnBackup');
+	setProperty('#btn_check_all_label', 'innerText', 'btnCheckAll');
+	setProperty('#btn_scroll_down_label', 'innerText', 'btnMore');
+	setProperty('#btn_backup_label', 'innerText', 'btnBackup');
 	setProperty('#alreadybackedup', 'innerText', 'txtAlreadyBackedup');
 	setProperty('#willbebackedup', 'innerText', 'txtWillBeBackedup');
 

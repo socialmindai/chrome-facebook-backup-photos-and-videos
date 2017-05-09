@@ -36,6 +36,37 @@ html, body {
 td {
 	padding-right: 5px;
 }
+
+.normal-right-spinner {
+    animation: glyphicon-spin-r 2s infinite linear;
+		width: 1.3em;
+}
+
+
+@-webkit-keyframes glyphicon-spin-r {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
+
+@keyframes glyphicon-spin-r {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(359deg);
+        transform: rotate(359deg);
+    }
+}
+
 </style>
 
 </head>
@@ -56,9 +87,16 @@ td {
 					<div>
 						<span id="willbebackedup">Will be backed up</span>: <span id="backupcount">0</span> / <span id="totalcount2">0</span>
 					</div>
-					<button id="btn_check_all" class="btn btn-default col-xs-4 controlbutton">Check All</button>
-					<button id="btn_scroll_down" class="btn btn-default col-xs-4 controlbutton" >More</button>
-					<button id="btn_backup" class="btn btn-primary col-xs-4 controlbutton">Backup</button>
+					<button id="btn_check_all" class="btn btn-default col-xs-4 controlbutton">
+						<span id="btn_check_all_label">Check All</span>
+					</button>
+					<button id="btn_scroll_down" class="btn btn-default col-xs-4 controlbutton">
+						<img id="btn_scroll_down_spinner" src="glyphicons-137-cogwheel.png" class="glyphicon-repeat normal-right-spinner" alt="Working" />
+						<span id="btn_scroll_down_label">More</span>
+					</button>
+					<button id="btn_backup" class="btn btn-primary col-xs-4 controlbutton">
+						<span id="btn_backup_label">Backup</span>
+					</button>
 				</div>
 			</nav>
 			<div class="col-xs-12" role="main" id="resultswrapper">
