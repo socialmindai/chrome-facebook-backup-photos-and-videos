@@ -12,3 +12,19 @@ I18:
 
 Promo graphics:
 - https://developer.chrome.com/webstore/images?hl=en-US#promo
+
+
+
+Albums:
+- Page:
+-- https://www.facebook.com/pg/Fractals-Daily-1504893012863108/photos/?tab=album&album_id=1536009553084787
+-- https://www.facebook.com/media/set/?set=a.1536009553084787.1073741829.1504893012863108&type=3
+
+- Group:
+-- https://www.facebook.com/media/set/?set=oa.791351474365773&type=1
+
+User:
+-- https://www.facebook.com/media/set/?set=a.125493754672592.1073741830.100016359044936&type=3
+-- https://www.facebook.com/profile.php?id=100016359044936&sk=photos&collection_token=100016359044936%3A2305272732%3A69&set=a.125493754672592.1073741830.100016359044936&type=3
+-- https://www.facebook.com/media/set/?set=a.10102686033608911.1073741836.4&type=3
+-- https://www.facebook.com/zuck/media_set?set=a.10102686033608911.1073741836.4&type=3
