@@ -16,6 +16,9 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
+### 1.3	(2017-05-09)
+- add support for downloading albums
+
 ### 1.2	(2017-05-06)
 - include extension version into google analytics
 

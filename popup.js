@@ -75,6 +75,9 @@ photo_video_regex = {
 	]
 }
 
+// we need this for group albums
+album_regex = /\/(media\/set\/|media_set\?set=)/
+
 var _AnalyticsCode = 'UA-97010726-4';
 
 var _gaq = _gaq || [];
@@ -352,6 +355,7 @@ function downloadVideos(fbid, txt) {
 			conflictAction: "prompt"
 		});
 		markAsDownloaded(fbid);
+		_gaq.push(['_trackEvent', 'download', 'video_hd']);
 		console.log("hd_src: " + hd_src[1]);
 	} else {
 		var sd_src = txt.match(/sd_src:"([^"]+)"/);
@@ -362,6 +366,7 @@ function downloadVideos(fbid, txt) {
 				conflictAction: "prompt"
 			});
 			markAsDownloaded(fbid);
+			_gaq.push(['_trackEvent', 'download', 'video_sd']);
 			console.log("sd_src: " + sd_src[1]);
 		}
 	}
@@ -384,6 +389,7 @@ function downloadPhoto(fbid, txt) {
 			conflictAction: "prompt"
 		});
 		markAsDownloaded(fbid);
+		_gaq.push(['_trackEvent', 'download', 'photo']);
 		console.log("img_src: " + img_src);
 	}
 
@@ -580,14 +586,14 @@ window.onload = function() {
 			function(response){
 				if (response === undefined) {
 					// Extension is not running on supported URL
-					_gaq.push(['_trackEvent', 'view', 'noresponse']);
+					_gaq.push(['_trackEvent', 'view', 'view_noresponse']);
 					return;
 				}
 
 				var url = response.url
 				if (url.match(/facebook\.com\//) === undefined) {
 					console.log(url);
-					_gaq.push(['_trackEvent', 'view', 'notsupporteddomain']);
+					_gaq.push(['_trackEvent', 'view', 'view_notsupporteddomain']);
 					return;
 				}
 				hide("notsupporteddomain");
@@ -595,11 +601,21 @@ window.onload = function() {
 
 				fbid = extractFbId(url);
 				if (fbid !== undefined) {
-					_gaq.push(['_trackEvent', 'view', 'singleitem']);
+					_gaq.push(['_trackEvent', 'view', 'view_singleitem']);
 					showAsSupported(true);
 					showMediaButtons(false);
 					showResultsView();
 					appendLinks("tableresults", fbid.type, [url]);
+					return;
+				}
+
+				var regex_match = url.match(album_regex);
+				if (regex_match) {
+					_gaq.push(['_trackEvent', 'view', 'view_album']);
+					showAsSupported(true);
+					showMediaButtons(false);
+					showResultsView();
+					extractLinks(tabs);
 					return;
 				}
 
@@ -611,7 +627,7 @@ window.onload = function() {
 						if (config_key === 'ignore') {
 							// this is not supported URL
 							// we have set up correct element visibility at the beginning
-							_gaq.push(['_trackEvent', 'view', 'notsupportedurl']);
+							_gaq.push(['_trackEvent', 'view', 'view_notsupportedurl']);
 							return;
 						}
 						showMediaButtons(true);
@@ -623,12 +639,12 @@ window.onload = function() {
 						var is_photo = url.match(config['regex_photos']);
 						var is_video = url.match(config['regex_videos']);
 						if (is_photo || is_video) {
-							_gaq.push(['_trackEvent', 'view', is_photo ? 'photos' : 'videos']);
+							_gaq.push(['_trackEvent', 'view', 'view_' + (is_photo ? 'photos' : 'videos')]);
 							btnActivate("btn_goto_videos", is_video);
 							btnActivate("btn_goto_photos", is_photo);
 							extractLinks(tabs);
 						} else {
-							_gaq.push(['_trackEvent', 'view', 'mainpage']);
+							_gaq.push(['_trackEvent', 'view', 'view_mainpage']);
 							hide("results_controls");
 							hide("confirmbackups");
 							hide("resultswrapper");
