@@ -24,7 +24,7 @@
     }
   ],
   "browser_action": {
-    "default_title": "BackupXX",
+    "default_title": "Backup",
     "default_popup": "popup.html"
   },
   "permissions": [
