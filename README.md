@@ -16,6 +16,9 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
+### 1.4	(2017-05-10)
+- tweak UI
+
 ### 1.3	(2017-05-09)
 - add support for downloading albums
 - tweak UI

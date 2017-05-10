@@ -2,6 +2,7 @@ var already_downloaded = 0;
 var total_count = 0;
 var to_backup = 0;
 var downloaded_now = 0;
+var previous_window_height = 0;
 
 
 // TODO: there should be better way how to recognize, where we are
@@ -454,6 +455,7 @@ function updateGeneralButtons(tabs) {
 		function(tabId, changeInfo, tab) {
 			console.log("chrome.tabs.onUpdated - " + tabId + " - " + tab.status);
 			if (tab.status == "complete") {
+				previous_window_height = 0;
 				extractLinks([tab]);
 			}
 		}
@@ -481,12 +483,13 @@ function updateGeneralButtons(tabs) {
 		'click',
 		function() {
 			hide("confirmbackups");
-			var prev = 0;
 			var height = 0;
-			var interval = setInterval(scrollDown, 5000);
+			var interval_delay = 4000;
+			var interval = setInterval(scrollDown, interval_delay);
+			btnDisable("btn_scroll_down", true);
 			hide("btn_scroll_down_label");
 			show("btn_scroll_down_spinner");
-			var MAX_ITERATIONS = 5;
+			var MAX_ITERATIONS = 1;
 			var current_iteration = 0;
 			function scrollDown() {
 				chrome.tabs.sendMessage(
@@ -495,19 +498,22 @@ function updateGeneralButtons(tabs) {
 					function(response){
 						current_iteration++;
 						height = response.height;
-						extractLinks(tabs);
-						if (prev == height) {
-							btnDisable("btn_scroll_down", true);
-							show("btn_scroll_down_label");
-							hide("btn_scroll_down_spinner");
-							clearInterval(interval);
-						} else if (current_iteration >= MAX_ITERATIONS) {
-							show("btn_scroll_down_label");
-							hide("btn_scroll_down_spinner");
-							clearInterval(interval);
-						} else {
-							prev = height;
-						}
+						setTimeout(function() {
+							extractLinks(tabs);
+							console.log("Prev: " + previous_window_height + "; Height: " + height);
+							if (previous_window_height == height) {
+								btnDisable("btn_scroll_down", true);
+								show("btn_scroll_down_label");
+								hide("btn_scroll_down_spinner");
+								clearInterval(interval);
+							} else if (current_iteration >= MAX_ITERATIONS) {
+								show("btn_scroll_down_label");
+								hide("btn_scroll_down_spinner");
+								btnDisable("btn_scroll_down", false);
+								clearInterval(interval);
+							}
+							previous_window_height = height;
+						}, 0.9 * interval_delay);
 					}
 				);
 		};
@@ -570,6 +576,8 @@ document.addEventListener(
 window.onload = function() {
 	loadI18nMessages();
 
+	previous_window_height = 0;
+
 	_gaq.push(['_trackEvent', 'load', chrome.app.getDetails().version]);
 	var buttons = document.querySelectorAll('button');
 	for (var i = 0; i < buttons.length; i++) {
@@ -586,6 +594,8 @@ window.onload = function() {
 		hide("btn_scroll_down_spinner");
 
 		updateGeneralButtons(tabs);
+
+		console.log("Current tab id: " + tabs[0].id);
 
 		chrome.tabs.sendMessage(
 			tabs[0].id,
