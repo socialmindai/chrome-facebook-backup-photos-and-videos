@@ -3,6 +3,7 @@ var total_count = 0;
 var to_backup = 0;
 var downloaded_now = 0;
 var previous_window_height = 0;
+var current_tab_id = 0;
 
 
 // TODO: there should be better way how to recognize, where we are
@@ -453,8 +454,8 @@ function downloadAll() {
 function updateGeneralButtons(tabs) {
 	chrome.tabs.onUpdated.addListener(
 		function(tabId, changeInfo, tab) {
-			console.log("chrome.tabs.onUpdated - " + tabId + " - " + tab.status);
-			if (tab.status == "complete") {
+			// console.log("chrome.tabs.onUpdated - " + tabId + " - " + tab.status);
+			if (tabId === current_tab_id && tab.status == "complete") {
 				previous_window_height = 0;
 				extractLinks([tab]);
 			}
@@ -586,6 +587,7 @@ window.onload = function() {
 
 	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		// console.log("Calling chrome.tabs.sendMessage");
+		current_tab_id = tabs[0].id;
 
 		hide("notsupported");
 		hide("supported");
@@ -594,8 +596,6 @@ window.onload = function() {
 		hide("btn_scroll_down_spinner");
 
 		updateGeneralButtons(tabs);
-
-		console.log("Current tab id: " + tabs[0].id);
 
 		chrome.tabs.sendMessage(
 			tabs[0].id,
