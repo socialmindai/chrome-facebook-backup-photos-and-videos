@@ -1,9 +1,9 @@
 {
   "extName": {
-    "message": "Facebook Backup Photos And Videos"
+    "message": "Facebook Backup - Download photos & videos"
   },
   "extDescription": {
-    "message": "Backup Facebook photos and videos from single group, page, or user profile."
+    "message": "Download Facebook photos and videos from single group, page, or user profile."
   },
   "btnBackupPhotos": {
     "message": "Backup Photos"
