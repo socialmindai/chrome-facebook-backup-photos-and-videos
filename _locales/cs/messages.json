@@ -5,8 +5,11 @@
   "extDescription": {
     "message": "Stáhněte si všechny fotky a videa z facebookové skupiny, stránky, události, nebo uživatelského profilu."
   },
+  "extPopupTitle": {
+    "message": "Zálohovat"
+  },
   "btnBackupPhotos": {
-    "message": "Zálohovat fotky"
+    "message": " fotky"
   },
   "btnBackupVideos": {
     "message": "Zálohovat videa"
