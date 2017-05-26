@@ -5,6 +5,10 @@ var downloaded_now = 0;
 var previous_window_height = 0;
 var current_tab_id = 0;
 
+var MAX_DOWNLOADS = 4;
+var downloading_in_progress = false;
+var downloads_in_progress = 0;
+
 
 // TODO: there should be better way how to recognize, where we are
 var regexp_configs = {
@@ -126,6 +130,8 @@ function showOrHide(id, should_show) {
 	}
 }
 
+
+
 function btnActivate(id, activate) {
 	var btn = bId(id);
 	if (activate) {
@@ -181,11 +187,10 @@ function appendLink(parent, fbid) {
 		'change',
 		function(e) {
 			if (e.target.checked) {
-				to_backup++;
+				changeToBackup(+1, true);
 			} else {
-				to_backup--;
+				changeToBackup(-1, true);
 			}
-			updateBackUpCount();
 			hide("confirmbackups");
 		}
 	);
@@ -266,8 +271,10 @@ function updateBackedUpCount() {
 
 function updateBackUpCount() {
 	bId("backupcount").innerHTML = to_backup;
-	btnDisable("btn_backup", to_backup === 0);
-	btnDisable("btn_check_all", to_backup === total_count);
+	if (! downloading_in_progress) {
+		btnDisable("btn_backup", to_backup === 0);
+		btnDisable("btn_check_all", to_backup === total_count);
+	}
 }
 
 function showResultsView() {
@@ -327,16 +334,14 @@ function markAsDownloaded(fbid) {
 	chrome.storage.local.set(toStore, function(){
 		// console.log("Marked as downloaded - callback: " + fbid);
 		var inp = bId("cb_" + fbid).checked = false;
-		to_backup--;
-		updateBackUpCount();
-		// TODO: we should update somewhere number of alredy downloaded
-
-		if (to_backup === 0) {
-			bId("confirmbackups").innerHTML = chrome.i18n.getMessage("txtConfirmBackups", [to_download]);
-			// window.alert("Downloaded count: " + to_download);
-			show("confirmbackups");
-		}
+		changeToBackup(-1, false);
 	});
+}
+
+function downloadingInProgress(state) {
+	downloading_in_progress = state;
+	btnActivate("btn_backup", ! state);
+	// BBB
 }
 
 function extractTimeStamp(txt) {
@@ -351,25 +356,17 @@ function downloadVideos(fbid, txt) {
 
 	var hd_src = txt.match(/hd_src:"([^"]+)"/);
 	if (hd_src) {
-		chrome.downloads.download({
-			url: hd_src[1],
-			filename: prefix + "_hd.mp4",
-			conflictAction: "prompt"
-		});
-		markAsDownloaded(fbid);
-		_gaq.push(['_trackEvent', 'download', 'video_hd']);
+		downloadItem(fbid, hd_src[1], prefix + "_hd.mp4", 'video_hd');
 		console.log("hd_src: " + hd_src[1]);
 	} else {
 		var sd_src = txt.match(/sd_src:"([^"]+)"/);
 		if (sd_src) {
-			chrome.downloads.download({
-				url: sd_src[1],
-				filename: prefix + "_sd.mp4",
-				conflictAction: "prompt"
-			});
-			markAsDownloaded(fbid);
-			_gaq.push(['_trackEvent', 'download', 'video_sd']);
+			downloadItem(fbid, sd_src[1], prefix + "_sd.mp4", 'video_sd');
 			console.log("sd_src: " + sd_src[1]);
+		} else {
+			console.error("Not able to extract src for " + fbid);
+			changeToBackup(-1, false);
+			changeDownloadsInProgress(-1);
 		}
 	}
 }
@@ -379,28 +376,63 @@ function downloadPhoto(fbid, txt) {
 	var prefix = constructFileNamePrefix(fbid, ts);
  	var src = txt.match(/data-ploi="([^"]+)"/);
 	if (src) {
-		/*
-		console.log(src[1]);
-		console.log(decodeURIComponent(src[1]));
-		console.log(decodeURI(src[1]));
-		*/
 		img_src = src[1].replace(/amp;/g, "");
-		chrome.downloads.download({
-			url: img_src,
-			filename: prefix + ".jpg",
-			conflictAction: "prompt"
-		});
-		markAsDownloaded(fbid);
-		_gaq.push(['_trackEvent', 'download', 'photo']);
+		downloadItem(fbid, img_src, prefix + ".jpg", 'photo');
 		console.log("img_src: " + img_src);
+	} else {
+		console.error("Not able to extract src for " + fbid);
+		changeToBackup(-1, false);
+		changeDownloadsInProgress(-1);
 	}
-
 }
 
+function downloadItem(fbid, url, file_name, type) {
+	setTimeout(function() {
+		if (downloads_in_progress < MAX_DOWNLOADS) {
+			changeDownloadsInProgress(+1);
+			chrome.downloads.download({
+				url: url,
+				filename: "fb_" + file_name,
+				conflictAction: "prompt"
+			});
+			markAsDownloaded(fbid);
+			_gaq.push(['_trackEvent', 'download', type]);
+		} else {
+			downloadItem(fbid, url, file_name, type);
+		}
+	}, 500);
+}
+
+chrome.downloads.onChanged.addListener(function(downloadDelta) {
+	var state = downloadDelta['state'];
+	if (state && state['current'] === 'complete') {
+		changeDownloadsInProgress(-1);
+	}
+});
+
+function changeDownloadsInProgress(delta) {
+	downloads_in_progress += delta;
+	if (downloads_in_progress <= 0) {
+		downloadingInProgress(false);
+	}
+}
+
+function changeToBackup(delta, by_human) {
+	to_backup += delta;
+	updateBackUpCount();
+
+	if (!by_human && to_backup === 0) {
+		bId("confirmbackups").innerHTML = chrome.i18n.getMessage("txtConfirmBackups", [to_download]);
+		// window.alert("Downloaded count: " + to_download);
+		show("confirmbackups");
+	}
+}
+
+// TODO: add handeling of error states
 function downloadHelper(fbid, url, url_type) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", url, true);
-	xhr.onreadystatechange = function() {
+	xhr.onload = function() {
 		if (xhr.readyState == 4) {
 			var res = {};
 			if (url_type === "video") {
@@ -439,13 +471,18 @@ function downloadAll() {
 	);
 
 	to_download = checked_inputs.length;
-	for (i = 0; i < checked_inputs.length; i++) {
-		inp = checked_inputs[i];
-		if (inp.checked) {
-			var url = inp.getAttribute("url");
-			var url_type = inp.getAttribute("url_type");
-			var fbid = inp.getAttribute("fbid");
-			downloadHelper(fbid, url, url_type);
+	console.dir(to_download);
+	if (to_download > 0) {
+		downloads_in_progress = 0;
+		downloadingInProgress(true);
+		for (i = 0; i < to_download; i++) {
+			inp = checked_inputs[i];
+			if (inp.checked) {
+				var url = inp.getAttribute("url");
+				var url_type = inp.getAttribute("url_type");
+				var fbid = inp.getAttribute("fbid");
+				downloadHelper(fbid, url, url_type);
+			}
 		}
 	}
 }
