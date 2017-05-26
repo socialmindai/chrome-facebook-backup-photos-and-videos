@@ -19,6 +19,7 @@ You can try extension on following facebook groups, pages, and user profiles.
 ### 1.5	(2017-05-26)
 - limit number of simultaneous downloads
 - show information about failed downloads
+- log important information directly into main window console
 
 ### 1.4	(2017-05-10)
 - tweak UI

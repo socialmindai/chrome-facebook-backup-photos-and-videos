@@ -352,7 +352,7 @@ function extractTimeStamp(txt) {
 	return m ? m[1] : 0
 }
 
-function downloadVideos(fbid, txt) {
+function downloadVideos(fbid, url, txt) {
 	var ts = extractTimeStamp(txt);
 	var prefix = constructFileNamePrefix(fbid, ts);
 
@@ -366,15 +366,12 @@ function downloadVideos(fbid, txt) {
 			downloadItem(fbid, sd_src[1], prefix + "_sd.mp4", 'video_sd');
 			console.log("sd_src: " + sd_src[1]);
 		} else {
-			console.error("Not able to extract src for " + fbid);
-			changeDownloadsInProgress(-1);
-			changeDownloadsFailures(+1);
-			changeToBackup(-1, false);
+			srcExtractionFailure(fbid, url);
 		}
 	}
 }
 
-function downloadPhoto(fbid, txt) {
+function downloadPhoto(fbid, url, txt) {
 	var ts = extractTimeStamp(txt);
 	var prefix = constructFileNamePrefix(fbid, ts);
  	var src = txt.match(/data-ploi="([^"]+)"/);
@@ -383,11 +380,26 @@ function downloadPhoto(fbid, txt) {
 		downloadItem(fbid, img_src, prefix + ".jpg", 'photo');
 		console.log("img_src: " + img_src);
 	} else {
-		console.error("Not able to extract src for " + fbid);
-		changeDownloadsInProgress(-1);
-		changeDownloadsFailures(+1);
-		changeToBackup(-1, false);
+		srcExtractionFailure(fbid, url);
 	}
+}
+
+function srcExtractionFailure(fbid, url) {
+	console.error("Not able to extract src for " + fbid + ": " + url);
+	changeDownloadsInProgress(-1);
+	changeDownloadsFailures(+1);
+	changeToBackup(-1, false);
+
+	chrome.tabs.sendMessage(
+		current_tab_id,
+		{m: 'log', payload: {
+			msg: 'Not able to extract src.',
+			fbid: fbid,
+			url: url}
+		},
+		function(response){
+		}
+	);
 }
 
 function downloadItem(fbid, url, file_name, type) {
@@ -450,9 +462,9 @@ function downloadHelper(fbid, url, url_type) {
 		if (xhr.readyState == 4) {
 			var res = {};
 			if (url_type === "video") {
-				res = downloadVideos(fbid, xhr.responseText);
+				res = downloadVideos(fbid, url, xhr.responseText);
 			} else if (url_type === "photo") {
-				res = downloadPhoto(fbid, xhr.responseText);
+				res = downloadPhoto(fbid, url, xhr.responseText);
 			} else {
 				console.error("Unsupported url_type: " + url_type);
 			}
@@ -485,7 +497,6 @@ function downloadAll() {
 	);
 
 	to_download = checked_inputs.length;
-	console.dir(to_download);
 	if (to_download > 0) {
 		downloads_in_progress = 0;
 		downloads_failures = 0;

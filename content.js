@@ -38,6 +38,8 @@ chrome.runtime.onMessage.addListener(function(message,sender,sendResponse){
 		window.scrollTo(0, document.body.scrollHeight);
 		message.height = document.body.scrollHeight;
 		sendResponse(message);
+	} else if (message.m === 'log'){
+		console.dir(message.payload)
 	} else {
 		console.error("Unsupported operation " + message.m);
 		console.dir(message);
