@@ -5,9 +5,10 @@ var downloaded_now = 0;
 var previous_window_height = 0;
 var current_tab_id = 0;
 
-var MAX_DOWNLOADS = 4;
+var MAX_DOWNLOADS = 3;
 var downloading_in_progress = false;
 var downloads_in_progress = 0;
+var downloads_failures = 0;
 
 
 // TODO: there should be better way how to recognize, where we are
@@ -192,6 +193,7 @@ function appendLink(parent, fbid) {
 				changeToBackup(-1, true);
 			}
 			hide("confirmbackups");
+			hide("failedbackups");
 		}
 	);
 
@@ -365,8 +367,9 @@ function downloadVideos(fbid, txt) {
 			console.log("sd_src: " + sd_src[1]);
 		} else {
 			console.error("Not able to extract src for " + fbid);
-			changeToBackup(-1, false);
 			changeDownloadsInProgress(-1);
+			changeDownloadsFailures(+1);
+			changeToBackup(-1, false);
 		}
 	}
 }
@@ -381,14 +384,15 @@ function downloadPhoto(fbid, txt) {
 		console.log("img_src: " + img_src);
 	} else {
 		console.error("Not able to extract src for " + fbid);
-		changeToBackup(-1, false);
 		changeDownloadsInProgress(-1);
+		changeDownloadsFailures(+1);
+		changeToBackup(-1, false);
 	}
 }
 
 function downloadItem(fbid, url, file_name, type) {
 	setTimeout(function() {
-		if (downloads_in_progress < MAX_DOWNLOADS) {
+		if (downloads_in_progress <= MAX_DOWNLOADS) {
 			changeDownloadsInProgress(+1);
 			chrome.downloads.download({
 				url: url,
@@ -422,9 +426,19 @@ function changeToBackup(delta, by_human) {
 	updateBackUpCount();
 
 	if (!by_human && to_backup === 0) {
-		bId("confirmbackups").innerHTML = chrome.i18n.getMessage("txtConfirmBackups", [to_download]);
-		// window.alert("Downloaded count: " + to_download);
-		show("confirmbackups");
+		var success = to_download - downloads_failures;
+		if (success > 0) {
+			bId("confirmbackups").innerHTML = chrome.i18n.getMessage("txtConfirmBackups", [success]);
+			show("confirmbackups");
+		}
+	}
+}
+
+function changeDownloadsFailures(delta) {
+	downloads_failures += delta;
+	if (downloads_failures > 0) {
+		bId("failedbackups").innerHTML = chrome.i18n.getMessage("txtFailedBackups", [downloads_failures]);
+		show("failedbackups");
 	}
 }
 
@@ -474,6 +488,7 @@ function downloadAll() {
 	console.dir(to_download);
 	if (to_download > 0) {
 		downloads_in_progress = 0;
+		downloads_failures = 0;
 		downloadingInProgress(true);
 		for (i = 0; i < to_download; i++) {
 			inp = checked_inputs[i];
@@ -521,6 +536,7 @@ function updateGeneralButtons(tabs) {
 		'click',
 		function() {
 			hide("confirmbackups");
+			hide("failedbackups");
 			var height = 0;
 			var interval_delay = 4000;
 			var interval = setInterval(scrollDown, interval_delay);
@@ -571,6 +587,7 @@ function updateMediaButtons(tabs, base_url, config) {
 				}
 				btnActivate(id, true);
 				hide("confirmbackups");
+				hide("failedbackups");
 				// console.log(url);
 				chrome.tabs.update(
 					tabs[0].id,
@@ -629,6 +646,7 @@ window.onload = function() {
 		hide("notsupported");
 		hide("supported");
 		hide("confirmbackups");
+		hide("failedbackups")
 		hide("resultswrapper");
 		hide("btn_scroll_down_spinner");
 
@@ -701,6 +719,7 @@ window.onload = function() {
 							_gaq.push(['_trackEvent', 'view', 'view_mainpage']);
 							hide("results_controls");
 							hide("confirmbackups");
+							hide("failedbackups");
 							hide("resultswrapper");
 						}
 						return;

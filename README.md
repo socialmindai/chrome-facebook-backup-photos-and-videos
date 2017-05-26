@@ -16,6 +16,10 @@ You can try extension on following facebook groups, pages, and user profiles.
 
 ## Changelog
 
+### 1.5	(2017-05-26)
+- limit number of simultaneous downloads
+- show information about failed downloads
+
 ### 1.4	(2017-05-10)
 - tweak UI
 

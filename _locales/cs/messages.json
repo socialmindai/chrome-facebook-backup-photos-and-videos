@@ -45,5 +45,13 @@
         "content": "$1"
       }
     }
+  },
+  "txtFailedBackups": {
+    "message": "Zálohování $count$ položek selhalo.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
   }
 }
