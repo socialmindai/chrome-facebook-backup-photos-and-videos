@@ -10,6 +10,8 @@ var downloading_in_progress = false;
 var downloads_in_progress = 0;
 var downloads_failures = 0;
 
+var DEBUG_MODE = false;
+
 
 // TODO: there should be better way how to recognize, where we are
 var regexp_configs = {
@@ -203,7 +205,9 @@ function appendLink(parent, fbid) {
 
 	a = document.createElement("a");
 	a.href = fbid.href;
-	a.appendChild(document.createTextNode(fbid.id));
+	a.appendChild(document.createTextNode(
+		DEBUG_MODE ? fbid.href : fbid.id
+	));
 	var td2 = document.createElement("td");
 	td2.appendChild(a);
 	tr.appendChild(td2);
@@ -352,33 +356,62 @@ function extractTimeStamp(txt) {
 	return m ? m[1] : 0
 }
 
+function pick_src(srcs, fbid) {
+	if (!srcs) {
+		return undefined;
+	}
+	for (var i = 0; i < srcs.length; i++) {
+		var src = srcs[i];
+		if (src.indexOf(fbid) >= 0) {
+			return src;
+		}
+	}
+	return undefined;
+}
+
 function downloadVideos(fbid, url, txt) {
 	var ts = extractTimeStamp(txt);
 	var prefix = constructFileNamePrefix(fbid, ts);
 
-	var hd_src = txt.match(/hd_src:"([^"]+)"/);
-	if (hd_src) {
-		downloadItem(fbid, hd_src[1], prefix + "_hd.mp4", 'video_hd');
-		console.log("hd_src: " + hd_src[1]);
-	} else {
-		var sd_src = txt.match(/sd_src:"([^"]+)"/);
-		if (sd_src) {
-			downloadItem(fbid, sd_src[1], prefix + "_sd.mp4", 'video_sd');
-			console.log("sd_src: " + sd_src[1]);
-		} else {
-			srcExtractionFailure(fbid, url);
+	var qualities = {
+		"hd_src": "_hd",
+		"sd_src": "_sd"
+	};
+
+	for (quality in qualities) {
+		var re = new RegExp(
+			'video_id[^}]+' + fbid + '[^}]+' + quality + ':"([^"]+)"'
+		);
+		var match = txt.match(re);
+		if (match) {
+			var src = match[1]
+			var suffix = qualities[quality];
+			downloadItem(
+				fbid,
+				src,
+				prefix + suffix + ".mp4",
+				'video_' + suffix
+			);
+			console.log(quality + ": " + src);
+			return;
 		}
 	}
+	srcExtractionFailure(fbid, url);
 }
 
 function downloadPhoto(fbid, url, txt) {
 	var ts = extractTimeStamp(txt);
 	var prefix = constructFileNamePrefix(fbid, ts);
- 	var src = txt.match(/data-ploi="([^"]+)"/);
-	if (src) {
-		img_src = src[1].replace(/amp;/g, "");
-		downloadItem(fbid, img_src, prefix + ".jpg", 'photo');
-		console.log("img_src: " + img_src);
+
+	var re = new RegExp(
+		'fbid=' + fbid + '[^>]+data-ploi="([^"]+)'
+	);
+
+ 	var match = txt.match(re);
+	if (match) {
+		var src = match[1].replace(/amp;/g, "");
+		downloadItem(fbid, src, prefix + ".jpg", 'photo');
+		console.log("img_src: " + src);
 	} else {
 		srcExtractionFailure(fbid, url);
 	}
