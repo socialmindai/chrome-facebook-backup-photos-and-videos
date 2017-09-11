@@ -9,6 +9,8 @@ var MAX_DOWNLOADS = 3;
 var downloading_in_progress = false;
 var downloads_in_progress = 0;
 var downloads_failures = 0;
+var downloads_failure_reasons = {};
+var downloads_mapping = {};
 
 var DEBUG_MODE = false;
 
@@ -390,13 +392,13 @@ function downloadVideos(fbid, url, txt) {
 				fbid,
 				src,
 				prefix + suffix + ".mp4",
-				'video_' + suffix
+				'video' + suffix
 			);
 			console.log(quality + ": " + src);
 			return;
 		}
 	}
-	srcExtractionFailure(fbid, url);
+	srcExtractionFailure(fbid, url, 'video');
 }
 
 function downloadPhoto(fbid, url, txt) {
@@ -413,14 +415,14 @@ function downloadPhoto(fbid, url, txt) {
 		downloadItem(fbid, src, prefix + ".jpg", 'photo');
 		console.log("img_src: " + src);
 	} else {
-		srcExtractionFailure(fbid, url);
+		srcExtractionFailure(fbid, url, 'photo');
 	}
 }
 
-function srcExtractionFailure(fbid, url) {
+function srcExtractionFailure(fbid, url, type) {
 	console.error("Not able to extract src for " + fbid + ": " + url);
-	changeDownloadsInProgress(-1);
 	changeDownloadsFailures(+1);
+	addFailuresReason('EXTRACTION_' + type);
 	changeToBackup(-1, false);
 
 	chrome.tabs.sendMessage(
@@ -439,13 +441,20 @@ function downloadItem(fbid, url, file_name, type) {
 	setTimeout(function() {
 		if (downloads_in_progress <= MAX_DOWNLOADS) {
 			changeDownloadsInProgress(+1);
-			chrome.downloads.download({
-				url: url,
-				filename: "fb_" + file_name,
-				conflictAction: "prompt"
-			});
-			markAsDownloaded(fbid);
-			_gaq.push(['_trackEvent', 'download', type]);
+			chrome.downloads.download(
+				{
+					url: url,
+					filename: "fb_" + file_name,
+					conflictAction: "prompt"
+				},
+				function(download_id) {
+					downloads_mapping[download_id] = {
+						fbid: fbid,
+						url: url,
+						type: type,
+					};
+				}
+			);
 		} else {
 			downloadItem(fbid, url, file_name, type);
 		}
@@ -454,8 +463,29 @@ function downloadItem(fbid, url, file_name, type) {
 
 chrome.downloads.onChanged.addListener(function(downloadDelta) {
 	var state = downloadDelta['state'];
-	if (state && state['current'] === 'complete') {
+	if (state) {
 		changeDownloadsInProgress(-1);
+
+		var info = downloads_mapping[downloadDelta['id']];
+		var event_action = 'download_';
+		if (state['current'] === 'complete') {
+			event_action += 'ok';
+			markAsDownloaded(info['fbid']);
+		} else if (state['current'] === 'interrupted') {
+			var error = downloadDelta['error']['current'];
+			event_action += error;
+			if (error !== 'USER_CANCELED') {
+				changeDownloadsFailures(+1);
+			}
+			addFailuresReason(error);
+			changeToBackup(-1, false);
+		}
+		_gaq.push([
+			'_trackEvent',
+			event_action,
+			type
+		]);
+		delete downloads_mapping[downloadDelta['id']];
 	}
 });
 
@@ -476,6 +506,19 @@ function changeToBackup(delta, by_human) {
 			bId("confirmbackups").innerHTML = chrome.i18n.getMessage("txtConfirmBackups", [success]);
 			show("confirmbackups");
 		}
+
+		chrome.tabs.sendMessage(
+			current_tab_id,
+			{
+				m: 'log',
+				payload: {
+					msg: 'Failure reasons',
+					reasons: downloads_failure_reasons
+				}
+			},
+			function(response){
+			}
+		);
 	}
 }
 
@@ -485,6 +528,13 @@ function changeDownloadsFailures(delta) {
 		bId("failedbackups").innerHTML = chrome.i18n.getMessage("txtFailedBackups", [downloads_failures]);
 		show("failedbackups");
 	}
+}
+
+function addFailuresReason(reason) {
+	if (! downloads_failure_reasons.hasOwnProperty(reason)) {
+		downloads_failure_reasons[reason] = 0;
+	}
+	downloads_failure_reasons[reason]++;
 }
 
 // TODO: add handeling of error states
@@ -533,6 +583,8 @@ function downloadAll() {
 	if (to_download > 0) {
 		downloads_in_progress = 0;
 		downloads_failures = 0;
+		downloads_mapping = {};
+		downloads_failure_reasons = {};
 		downloadingInProgress(true);
 		for (i = 0; i < to_download; i++) {
 			inp = checked_inputs[i];
@@ -545,7 +597,6 @@ function downloadAll() {
 		}
 	}
 }
-
 
 function updateGeneralButtons(tabs) {
 	chrome.tabs.onUpdated.addListener(
