@@ -30,7 +30,7 @@
     "message": "Bude zazálohováno"
   },
   "txtNotSupportedDomain": {
-    "message": "Toto rozšíření nefunguje pro tuto doménu. Toto rozšíření je určeno pro <a href='https://www.facebook.com'>facebook.com</a>."
+    "message": "Toto rozšíření nefunguje pro tuto doménu. Toto rozšíření je určeno pro <a href='https://www.facebook.com'>facebook.com</a> Zkuste znovu načíst stránku nebo znovu klikněte na ikonku rozšíření."
   },
   "txtNotSupported": {
     "message": "Toto rozšíření funguje pro skupiny, události, stránky a uživatelské profily. Tato URL nevypadá jako jedna z nich. Prosím, zkuste raději kliknout na přímo na název skupiny, stránky nebo uživatele."

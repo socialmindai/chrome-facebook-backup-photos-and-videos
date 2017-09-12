@@ -483,7 +483,7 @@ chrome.downloads.onChanged.addListener(function(downloadDelta) {
 		_gaq.push([
 			'_trackEvent',
 			event_action,
-			type
+			info['type']
 		]);
 		delete downloads_mapping[downloadDelta['id']];
 	}
